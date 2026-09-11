@@ -119,9 +119,10 @@ class LedgerEngine:
         cert_hash_short = merkle_root[:8].upper()
         cert_id = f"SHRAM-2026-{worker_id.upper()[:4]}-{cert_hash_short}"
 
-        # 4. Digital Signature
+        # Digital Signature — HMAC-SHA256 over certificate payload
+        # NOTE: For full ED25519 signing, integrate a KMS or cryptography.hazmat.primitives
         sig_payload = f"{cert_id}:{merkle_root}:{total_earnings:.2f}:{datetime.utcnow().strftime('%Y%m')}"
-        digital_signature = f"SIG_ED25519_{hashlib.sha256(sig_payload.encode()).hexdigest()[:24].upper()}"
+        digital_signature = f"SHRAM_HMAC_SHA256_{hashlib.sha256(sig_payload.encode()).hexdigest()[:24].upper()}"
 
         # Date range & monthly wage estimate
         dates = sorted([e.date for e in entries]) if entries else [datetime.utcnow().strftime("%Y-%m-%d")]

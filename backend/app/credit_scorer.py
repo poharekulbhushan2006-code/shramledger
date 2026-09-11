@@ -1,4 +1,5 @@
 import math
+from collections import Counter
 from typing import List, Dict, Any
 from .models import WorkEntry, ShramScoreBreakdown, EndorsementStatus, EvidenceType, SkillCategory
 from .evidence_engine import EvidenceEngine
@@ -66,8 +67,10 @@ class CreditScorer:
             income_stability_score = 50
 
         # 2. Work Continuity Score (20% weight) - 0 to 100
-        # Based on number of recorded entries (target: 24+ days logged)
-        work_continuity_score = min(int((total_entries / 24.0) * 100), 100)
+        # Based on DISTINCT calendar dates logged (target: 24+ unique days)
+        # Using distinct dates prevents gaming via multiple entries on the same day
+        distinct_work_dates = len(set(e.date for e in entries))
+        work_continuity_score = min(int((distinct_work_dates / 24.0) * 100), 100)
 
         # 3. Verified Earnings Score (20% weight) - 0 to 100
         # Evaluates daily wage relative to minimum wage and digital payment modes
@@ -88,7 +91,9 @@ class CreditScorer:
         evidence_quality_score = int(evidence_breakdown.overall_evidence_confidence)
 
         # 6. Skill / Occupation Demand Score (10% weight) - 0 to 100
-        primary_skill = entries[0].skill_category if entries else SkillCategory.SKILLED
+        # Use most frequent skill category across all entries (not just first)
+        skill_counts = Counter(e.skill_category for e in entries)
+        primary_skill = skill_counts.most_common(1)[0][0]
         skill_demand_score = cls.SKILL_TIER_WEIGHTS.get(primary_skill, 80)
 
         # Weighted aggregate score (0 to 100)
@@ -123,8 +128,9 @@ class CreditScorer:
             stability_band = "Developing Profile"
             loan_readiness = "Eligible for Micro-Savings & Emergency Credit Pool (₹5,000)"
 
-        # Monthly income calculation (normalized to 24 active workdays)
-        estimated_monthly = round(avg_daily * min(max(total_entries, 18), 26), 2)
+        # Monthly income calculation based on actual recorded months
+        actual_months = len(set(e.date[:7] for e in entries)) or 1  # YYYY-MM distinct months
+        estimated_monthly = round(total_wages / actual_months, 2)
 
         # Transparent Explainability Factors
         positives = []

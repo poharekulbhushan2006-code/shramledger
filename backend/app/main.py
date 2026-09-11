@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from contextlib import asynccontextmanager
 
@@ -138,13 +138,20 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Enable CORS for frontend
+# Enable CORS for frontend — locked to known origins only
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "https://shramledger.in",
+    "https://app.shramledger.in",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "x-api-key", "x-dpdp-purpose"],
 )
 
 @app.get("/")
@@ -165,43 +172,49 @@ ACTIVE_OTP_STORE: Dict[str, Dict[str, Any]] = {}
 # 1. AUTH & DPDP ONBOARDING ROUTES
 # =========================================================================
 
+OTP_EXPIRY_SECONDS = 600  # 10 minutes
+
 @app.post("/api/auth/otp")
 def send_otp(req: OTPRequest):
     import random
     clean_phone = req.phone.replace(" ", "").replace("-", "")
-    if "9876543210" in clean_phone:
-        generated_otp = "8492"
-    else:
-        generated_otp = str(random.randint(100000, 999999))
-        
+    generated_otp = str(random.randint(100000, 999999))
+
     ACTIVE_OTP_STORE[clean_phone] = {
         "otp": generated_otp,
-        "generated_at": datetime.now().isoformat()
+        "generated_at": datetime.utcnow().isoformat()
     }
-    
+
+    # NOTE: In production, send OTP via SMS/WhatsApp gateway here.
+    # e.g., send_sms(clean_phone, f"Your ShramLedger OTP is {generated_otp}. Valid 10 min.")
+    # The OTP is NEVER returned in the API response.
     return {
         "status": "OTP_SENT",
-        "phone": req.phone,
-        "otp": generated_otp,
-        "sms_preview": f"Your ShramLedger verification OTP is {generated_otp}. Valid for 10 minutes.",
-        "message": f"Verification code sent to {req.phone}."
+        "message": f"Verification code sent to {req.phone}. Valid for 10 minutes."
     }
 
 @app.post("/api/auth/verify-otp")
 def verify_otp(req: OTPVerifyRequest):
     clean_phone = req.phone.replace(" ", "").replace("-", "")
     stored_data = ACTIVE_OTP_STORE.get(clean_phone)
-    
-    is_valid = False
-    if stored_data and stored_data.get("otp") == req.otp:
-        is_valid = True
-    elif req.otp in ["8492", "1234", "9999"]:
-        is_valid = True
-        
-    if is_valid:
-        return {"status": "VERIFIED", "phone": req.phone, "token": f"SHRAM_TOKEN_{uuid.uuid4().hex[:12]}"}
-        
-    raise HTTPException(status_code=400, detail="Invalid verification code entered. Please enter the OTP sent to your phone.")
+
+    if not stored_data:
+        raise HTTPException(status_code=400, detail="No OTP found. Please request a new OTP.")
+
+    # Enforce 10-minute expiry
+    generated_at = datetime.fromisoformat(stored_data["generated_at"])
+    elapsed_seconds = (datetime.utcnow() - generated_at).total_seconds()
+    if elapsed_seconds > OTP_EXPIRY_SECONDS:
+        ACTIVE_OTP_STORE.pop(clean_phone, None)
+        raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
+
+    if stored_data.get("otp") != req.otp:
+        raise HTTPException(status_code=400, detail="Invalid verification code. Please check and retry.")
+
+    # OTP consumed — remove from store to prevent replay attacks
+    ACTIVE_OTP_STORE.pop(clean_phone, None)
+    return {"status": "VERIFIED", "phone": req.phone, "token": f"SHRAM_TOKEN_{uuid.uuid4().hex[:12]}"}
+
 
 @app.post("/api/onboard/worker", response_model=WorkerProfile)
 def onboard_worker(req: WorkerOnboardingRequest, db: Session = Depends(get_db)):
@@ -269,7 +282,7 @@ def onboard_worker(req: WorkerOnboardingRequest, db: Session = Depends(get_db)):
         )
         db.add(profile_db)
 
-    consent_id = f"DPDP-CSN-{uuid.uuid4().hex[:8].upper()}"
+    consent_ttl_days = 180
     consent_db = ConsentRecordDB(
         id=consent_id,
         worker_id=worker_id,
@@ -278,6 +291,8 @@ def onboard_worker(req: WorkerOnboardingRequest, db: Session = Depends(get_db)):
         purpose="Employment Record Maintenance & Welfare Matching under DPDP Act 2023",
         dpdp_notice_version="v1.0-2026",
         is_active=True,
+        ttl_days=consent_ttl_days,
+        expires_at=datetime.utcnow() + timedelta(days=consent_ttl_days),
         consent_proof_hash=MerkleTree.sha256(f"{worker_id}:{req.phone}:{datetime.utcnow().isoformat()}")
     )
     db.add(consent_db)

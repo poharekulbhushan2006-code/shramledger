@@ -259,6 +259,9 @@ class ConsentRecord(Base):
     is_active = Column(Boolean, default=True)
     is_revoked = Column(Boolean, default=False)
     granted_at = Column(DateTime, default=datetime.utcnow)
+    # DPDP Act 2023 compliance: consent must be time-bound
+    ttl_days = Column(Integer, default=180)  # 180-day default TTL
+    expires_at = Column(DateTime, nullable=True)  # Set to granted_at + ttl_days on creation
     revoked_at = Column(DateTime, nullable=True)
     consent_proof_hash = Column(String(128), nullable=False)
 
