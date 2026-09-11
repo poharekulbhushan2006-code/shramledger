@@ -16,11 +16,6 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
-  },
-  define: {
-    // Makes VITE_API_URL available as import.meta.env.VITE_API_URL
-    // Set this to your Railway backend URL in Vercel environment variables
-    __APP_VERSION__: JSON.stringify('1.0.0'),
   }
 })
 
