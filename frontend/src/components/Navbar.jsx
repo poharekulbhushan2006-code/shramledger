@@ -14,7 +14,8 @@ import {
   Building,
   ShieldAlert,
   UserPlus,
-  CheckCircle2
+  CheckCircle2,
+  Search
 } from 'lucide-react';
 import { TRANSLATIONS } from '../utils/locales';
 
@@ -30,7 +31,8 @@ export default function Navbar({
   onOpenDocScan,
   onOpenManualEntry,
   onOpenOnboarding,
-  onOpenQuote
+  onOpenQuote,
+  onOpenCommandPalette
 }) {
   const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
   const [isScrolled, setIsScrolled] = useState(false);
@@ -142,6 +144,19 @@ export default function Navbar({
 
             {/* ── Right: Proposal Quote + Register Worker + Worker Select + Lang ── */}
             <div className="flex items-center gap-2">
+
+              {/* Command Palette Trigger */}
+              <button
+                onClick={onOpenCommandPalette}
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700/80 font-semibold text-xs transition-all hover:border-amber-500/40"
+                title="Open Command Console (Ctrl+K)"
+              >
+                <Search className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-slate-300 font-medium">Search</span>
+                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">
+                  ⌘K
+                </kbd>
+              </button>
 
               {/* Commercial Quote Proposal Button */}
               <button

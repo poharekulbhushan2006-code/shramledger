@@ -14,18 +14,21 @@ import {
   Lock,
   Hash,
   Zap,
-  ArrowUpRight
+  ArrowUpRight,
+  Layers
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import confetti from 'canvas-confetti';
 import { TRANSLATIONS } from '../utils/locales';
+import MerkleDagVisualizer from './MerkleDagVisualizer';
 
 export default function IncomeCertificate({ certificate, worker, currentLang, onOpenVerifierWithCert }) {
   const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
   const certRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [showDag, setShowDag] = useState(false);
 
   if (!certificate || !worker) return null;
 
@@ -89,6 +92,13 @@ export default function IncomeCertificate({ certificate, worker, currentLang, on
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
+            onClick={() => setShowDag(!showDag)}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/35 text-cyan-300 text-xs font-semibold transition-all hover:scale-105"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            {showDag ? 'Hide Merkle DAG' : 'Inspect Merkle DAG'}
+          </button>
+          <button
             onClick={onOpenVerifierWithCert}
             className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl glass hover:bg-slate-800/80 border border-slate-700/50 text-slate-300 text-xs font-semibold transition-all hover:scale-105"
           >
@@ -112,6 +122,17 @@ export default function IncomeCertificate({ certificate, worker, currentLang, on
           </button>
         </div>
       </div>
+
+      {/* ── Interactive Merkle DAG Inspector View ─────────────── */}
+      {showDag && (
+        <div className="animate-slide-up">
+          <MerkleDagVisualizer
+            entries={worker?.work_entries || []}
+            worker={worker}
+            onClose={() => setShowDag(false)}
+          />
+        </div>
+      )}
 
       {/* ── Official Certificate (Exportable) ────────────────── */}
       <div

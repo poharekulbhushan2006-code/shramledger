@@ -33,6 +33,7 @@ import LenderPortal from './components/LenderPortal';
 import NgoGovPortal from './components/NgoGovPortal';
 import AdminFraudDashboard from './components/AdminFraudDashboard';
 import CommercialQuoteModal from './components/CommercialQuoteModal';
+import CommandPaletteModal from './components/CommandPaletteModal';
 import { api } from './services/api';
 import { TRANSLATIONS } from './utils/locales';
 
@@ -174,7 +175,19 @@ export default function App() {
   const [isDocOpen, setIsDocOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
   const [isQuoteOpen, setIsQuoteOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [endorseTargetEntry, setEndorseTargetEntry] = useState(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleEnterDashboard = () => {
     setShowLanding(false);
@@ -286,6 +299,7 @@ export default function App() {
         onOpenManualEntry={() => setIsManualOpen(true)}
         onOpenOnboarding={() => setIsOnboardingOpen(true)}
         onOpenQuote={() => setIsQuoteOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
@@ -551,6 +565,17 @@ export default function App() {
       <CommercialQuoteModal
         isOpen={isQuoteOpen}
         onClose={() => setIsQuoteOpen(false)}
+      />
+      <CommandPaletteModal
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        workers={workers}
+        onSelectWorker={(w) => setSelectedWorker(w)}
+        onNavigateView={(v) => setViewMode(v)}
+        onOpenOnboarding={() => setIsOnboardingOpen(true)}
+        onOpenQuote={() => setIsQuoteOpen(true)}
+        onOpenVoice={() => setIsVoiceOpen(true)}
+        onOpenDoc={() => setIsDocOpen(true)}
       />
     </div>
   );

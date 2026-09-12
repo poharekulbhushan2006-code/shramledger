@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Building2, 
   CheckCircle2, 
@@ -23,6 +23,8 @@ import {
   Printer,
   FileCheck
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { api } from '../services/api';
 
 export default function EmployerPortal({ onVerificationHandled }) {
@@ -34,6 +36,10 @@ export default function EmployerPortal({ onVerificationHandled }) {
   const [notes, setNotes] = useState('Work hours and wage payout verified on-site.');
   const [isProcessing, setIsProcessing] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  
+  const fileInputRef = useRef(null);
+  const bocwRef = useRef(null);
+  const [isExportingBocw, setIsExportingBocw] = useState(false);
 
   // Bulk muster state
   const [bulkRecords, setBulkRecords] = useState([
@@ -201,6 +207,95 @@ export default function EmployerPortal({ onVerificationHandled }) {
       alert('Payout batch execution failed: ' + err.message);
     } finally {
       setIsExecutingPayout(false);
+    }
+  };
+
+  const downloadSampleCsv = () => {
+    const csvHeader = "Worker Name,Phone,Primary Trade,Hours Worked,Daily Wage,Payment Mode,Site Location,Work Date\n";
+    const csvRows = [
+      "Ramesh Kumar (राजमिस्त्री),+91 98765 43210,Mason / राजमिस्त्री,8.0,850.0,Cash,Noida Sector 62," + new Date().toISOString().split('T')[0],
+      "Sunita Devi (सहायक),+91 98201 23456,Helper / सहायक,8.0,700.0,UPI,Noida Sector 62," + new Date().toISOString().split('T')[0],
+      "Rajesh Yadav (बढ़ई),+91 98109 11223,Carpenter / बढ़ई,8.5,900.0,Cash,Noida Sector 62," + new Date().toISOString().split('T')[0],
+      "Kailash Chand (इलेक्ट्रीशियन),+91 98765 43210,Electrician / इलेक्ट्रीशियन,8.0,800.0,UPI,Noida Sector 62," + new Date().toISOString().split('T')[0],
+      "Amit Verma (प्लंबर),+91 98333 44556,Plumber / प्लंबर,8.0,850.0,UPI,Noida Sector 62," + new Date().toISOString().split('T')[0]
+    ].join("\n");
+    const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ShramLedger_Muster_Roll_Template.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCsvFileUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split(/\r\n|\n/).filter(line => line.trim().length > 0);
+      if (lines.length <= 1) return;
+      const parsed = [];
+      for (let i = 1; i < lines.length; i++) {
+        const parts = lines[i].split(',').map(p => p.trim());
+        if (parts.length >= 5) {
+          parsed.push({
+            worker_name: parts[0] || 'Worker ' + i,
+            phone: parts[1] || '+91 98765 43210',
+            primary_trade: parts[2] || 'Mason / राजमिस्त्री',
+            hours_worked: parseFloat(parts[3]) || 8.0,
+            daily_wage: parseFloat(parts[4]) || 750.0,
+            payment_mode: parts[5] || 'UPI',
+            site_location: parts[6] || 'Noida Sector 62',
+            work_date: parts[7] || new Date().toISOString().split('T')[0]
+          });
+        }
+      }
+      if (parsed.length > 0) {
+        setBulkRecords(parsed);
+        setSuccessMessage(`Imported ${parsed.length} workers from CSV!`);
+        setTimeout(() => setSuccessMessage(''), 4000);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const downloadNachBatchFile = () => {
+    if (!payoutResult) return;
+    const header = `ACH-CR-NACH-BOCW-${new Date().toISOString().slice(0,10).replace(/-/g,'')}---L&T-INFRASTRUCTURE-SITE04\n`;
+    const rows = bulkRecords.map((r, i) => {
+      return `REC|${(i+1).toString().padStart(4, '0')}|${r.phone.replace(/[^0-9]/g, '').slice(-10)}@upi|INR|${(r.daily_wage * 6).toFixed(2)}|${payoutResult.transaction_reference}|CREDIT_WAGE_WEEK36\n`;
+    }).join('');
+    const footer = `TRL|COUNT:${bulkRecords.length}|TOTAL:${(totalMusterWages * 6).toFixed(2)}|HASH:${payoutResult.merkle_batch_hash.slice(0, 16)}\n`;
+    const blob = new Blob([header + rows + footer], { type: 'text/plain;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `NACH_BOCW_PAYOUT_BATCH_${payoutResult.payout_batch_id}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadBocwPdf = async () => {
+    if (!bocwRef.current) return;
+    setIsExportingBocw(true);
+    try {
+      const canvas = await html2canvas(bocwRef.current, {
+        scale: 2,
+        backgroundColor: '#040810',
+        useCORS: true
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`BOCW_Form_XXIX_Register_${bocwData.site_id}.pdf`);
+    } catch (err) {
+      console.error('BOCW PDF Export failed:', err);
+    } finally {
+      setIsExportingBocw(false);
     }
   };
 
@@ -381,7 +476,30 @@ export default function EmployerPortal({ onVerificationHandled }) {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleCsvFileUpload}
+                  accept=".csv,text/csv"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all"
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
+                  Upload CSV Muster
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadSampleCsv}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-400" />
+                  Sample Template (.csv)
+                </button>
                 <button
                   type="button"
                   onClick={handleBulkSubmit}
@@ -389,10 +507,17 @@ export default function EmployerPortal({ onVerificationHandled }) {
                   className="btn-primary px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20"
                 >
                   {isBulkSubmitting ? <Sparkles className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                  Anchor Entire Muster to Ledger ({bulkRecords.length} Workers)
+                  Anchor Muster ({bulkRecords.length} Workers)
                 </button>
               </div>
             </div>
+
+            {successMessage && (
+              <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                {successMessage}
+              </div>
+            )}
 
             {/* Muster Preview Table */}
             <div className="overflow-x-auto rounded-2xl border border-slate-800">
@@ -404,26 +529,41 @@ export default function EmployerPortal({ onVerificationHandled }) {
                     <th className="p-3">Trade & Skill</th>
                     <th className="p-3">Hours</th>
                     <th className="p-3">Daily Wage</th>
+                    <th className="p-3">Statutory Check</th>
                     <th className="p-3">Mode</th>
                     <th className="p-3">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
-                  {bulkRecords.map((r, i) => (
-                    <tr key={i} className="hover:bg-slate-800/40">
-                      <td className="p-3 font-semibold text-slate-100">{r.worker_name}</td>
-                      <td className="p-3 font-mono text-slate-400">{r.phone}</td>
-                      <td className="p-3 text-amber-300">{r.primary_trade}</td>
-                      <td className="p-3 font-mono">{r.hours_worked} hrs</td>
-                      <td className="p-3 font-mono font-bold text-emerald-400">₹{r.daily_wage}</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">
-                          {r.payment_mode}
-                        </span>
-                      </td>
-                      <td className="p-3 font-mono text-slate-400">{r.work_date}</td>
-                    </tr>
-                  ))}
+                  {bulkRecords.map((r, i) => {
+                    const isMinWageCompliant = r.daily_wage >= 700;
+                    return (
+                      <tr key={i} className="hover:bg-slate-800/40">
+                        <td className="p-3 font-semibold text-slate-100">{r.worker_name}</td>
+                        <td className="p-3 font-mono text-slate-400">{r.phone}</td>
+                        <td className="p-3 text-amber-300">{r.primary_trade}</td>
+                        <td className="p-3 font-mono">{r.hours_worked} hrs</td>
+                        <td className="p-3 font-mono font-bold text-emerald-400">₹{r.daily_wage}</td>
+                        <td className="p-3">
+                          {isMinWageCompliant ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                              ✓ Compliant
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                              ⚠️ Sub-Baseline
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">
+                            {r.payment_mode}
+                          </span>
+                        </td>
+                        <td className="p-3 font-mono text-slate-400">{r.work_date}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
                 <tfoot className="bg-slate-950 text-xs font-bold border-t border-slate-800">
                   <tr>
@@ -468,7 +608,7 @@ export default function EmployerPortal({ onVerificationHandled }) {
           {isLoadingBocw ? (
             <div className="p-12 text-center text-slate-500 text-xs">Generating BOCW Statutory Compliance Statement...</div>
           ) : bocwData && (
-            <div className="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 space-y-6">
+            <div ref={bocwRef} className="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 space-y-6">
               
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
                 <div>
@@ -485,11 +625,19 @@ export default function EmployerPortal({ onVerificationHandled }) {
 
                 <div className="flex items-center gap-2">
                   <button
+                    onClick={handleDownloadBocwPdf}
+                    disabled={isExportingBocw}
+                    className="px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-all"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    {isExportingBocw ? 'Exporting...' : 'Download Form XXIX PDF'}
+                  </button>
+                  <button
                     onClick={() => window.print()}
                     className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5"
                   >
                     <Printer className="w-3.5 h-3.5" />
-                    Print Form XXIX
+                    Print
                   </button>
                 </div>
               </div>
@@ -577,13 +725,20 @@ export default function EmployerPortal({ onVerificationHandled }) {
           </div>
 
           {payoutResult && (
-            <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2 animate-scale-up">
-              <div className="flex items-center justify-between text-xs font-bold text-emerald-300">
+            <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-3 animate-scale-up">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-bold text-emerald-300 gap-2">
                 <span>{payoutResult.title} — {payoutResult.payout_status}</span>
-                <span className="font-mono text-slate-400">{payoutResult.transaction_reference}</span>
+                <button
+                  onClick={downloadNachBatchFile}
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5 w-fit"
+                >
+                  <Download className="w-3 h-3" />
+                  Download Bank NACH Batch File (.txt)
+                </button>
               </div>
-              <div className="font-mono text-[10px] text-slate-400 break-all">
-                Merkle Hash: {payoutResult.merkle_batch_hash}
+              <div className="font-mono text-[10px] text-slate-400 break-all space-y-1">
+                <div>Ref: {payoutResult.transaction_reference}</div>
+                <div>Merkle Hash: {payoutResult.merkle_batch_hash}</div>
               </div>
             </div>
           )}
