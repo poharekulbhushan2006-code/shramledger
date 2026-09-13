@@ -222,7 +222,7 @@ tests/test_core.py::test_end_to_end_credentialing_pipeline PASSED        [100%]
 
 ## 🔌 Developer Sandbox API Reference
 
-All sandbox endpoints authenticate via the `x-api-key` header (`shram_sand_demo_sandbox_01`).
+All sandbox endpoints authenticate via the `x-api-key` header (`x-api-key: ${SHRAM_API_KEY}`).
 
 ```http
 # 1. Real OCR Document Ingestion (Multipart Image File)
@@ -233,13 +233,13 @@ file: [Binary Image: chit.jpg / upi_slip.png]
 
 # Response:
 {
-  "extracted_text": "Shree Ram Construction Daily Wage Rs. 850 ...",
+  "extracted_text": "Demo Construction Site Daily Wage Rs. 850 ...",
   "bounding_boxes": [{"box": [10, 15, 140, 35], "text": "Daily Wage", "confidence": 0.94}],
   "parsed_entities": {
     "date": "2026-09-11",
     "amount": 850.0,
     "skill_type": "Mason / राजमिस्त्री",
-    "employer_name": "Shree Ram Construction",
+    "employer_name": "Demo Infrastructure Pvt Ltd",
     "hours_worked": 8.0
   },
   "document_hash": "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e",
@@ -254,15 +254,15 @@ POST /api/ledger/verify-tamper
 Content-Type: application/json
 
 {
-  "worker_id": "worker_ramesh",
-  "tampered_entry_id": "WRK-RAM-01",
+  "worker_id": "worker_demo_01",
+  "tampered_entry_id": "WRK-DEMO-01",
   "tampered_wage": 950.0
 }
 
 # 3. Credit Underwriting Income Summary (Consent Governed)
-GET /api/v1/workers/worker_ramesh/income-summary
+GET /api/v1/workers/worker_demo_01/income-summary
 Headers:
-  x-api-key: shram_sand_demo_sandbox_01
+  x-api-key: ${SHRAM_API_KEY}
   x-dpdp-purpose: LOAN_UNDERWRITING_MUDRA
 ```
 

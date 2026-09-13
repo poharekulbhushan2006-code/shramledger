@@ -96,10 +96,10 @@ export default function EmployerPortal({ onVerificationHandled }) {
   const [isExecutingPayout, setIsExecutingPayout] = useState(false);
 
   // Contractor profile
-  const contractorName = "Rajesh Sharma (Site Incharge)";
-  const contractorPhone = "+91 98765 43210";
-  const contractorCompany = "Larsen & Toubro Infra Pvt Ltd";
-  const siteName = "Noida Sector 62 Infrastructure Extension Site";
+  const contractorName = "Demo Contractor (Site Lead)";
+  const contractorPhone = "+91XXXXXXXXXX";
+  const contractorCompany = "Demo Infrastructure Pvt Ltd";
+  const siteName = "Demo Infrastructure Site 01";
 
   useEffect(() => {
     loadPendingVerifications();

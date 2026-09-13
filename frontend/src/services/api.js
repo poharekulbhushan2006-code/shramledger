@@ -526,8 +526,8 @@ export const api = {
     return {
       quote_id: `QTE-2026-${randHex}`,
       generated_at: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', 14:30 UTC',
-      company_name: payload.company_name || 'Larsen & Toubro Infra Site 04',
-      contact_name: payload.contact_name || 'Anil Verma (Project Director)',
+      company_name: payload.company_name || 'Demo Infrastructure Pvt Ltd',
+      contact_name: payload.contact_name || 'Demo User',
       plan_name: selectedTier.name,
       base_fee_monthly: baseFee,
       usage_fee_per_worker: perWorker,

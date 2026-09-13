@@ -288,15 +288,15 @@ export default function AdminFraudDashboard() {
                       worker_id: 'WKR-88219',
                       worker_name: 'Ramesh Kumar (Bar Bender)',
                       contractor_a: {
-                        name: 'Larsen & Toubro Ltd (Metro Line 3)',
-                        location: 'SEEPZ, Andheri East, Mumbai',
+                        name: 'Demo Infrastructure Ltd (Site A)',
+                        location: 'Sector 62 Site, NCR',
                         shift_time: '08:00 - 16:30 IST',
-                        supervisor: 'J. Deshmukh',
-                        gps: '19.1255° N, 72.8732° E'
+                        supervisor: 'J. Sharma',
+                        gps: '28.6280° N, 77.3649° E'
                       },
                       contractor_b: {
-                        name: 'Shapoorji Pallonji (Thane IT Park Ph-2)',
-                        location: 'Ghodbunder Rd, Thane West',
+                        name: 'Apex Builders (Site B)',
+                        location: 'Greater Noida Site',
                         shift_time: '10:00 - 18:00 IST',
                         supervisor: 'R. K. Verma',
                         gps: '19.2612° N, 72.9644° E'

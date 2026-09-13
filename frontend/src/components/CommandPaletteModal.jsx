@@ -81,7 +81,7 @@ export default function CommandPaletteModal({
     {
       id: 'employer',
       category: 'Institutional Consoles',
-      title: 'Larsen & Toubro Ltd — EPC Contractor Console',
+      title: 'Demo Infrastructure Ltd — Contractor Console',
       subtitle: 'Form XXIX statutory registers, CSV bulk attendance, NACH bank export',
       icon: Building2,
       color: 'text-emerald-400 bg-emerald-500/10',
@@ -90,7 +90,7 @@ export default function CommandPaletteModal({
     {
       id: 'lender',
       category: 'Institutional Consoles',
-      title: 'HDFC Bank Digital Underwriting & Sanction Desk',
+      title: 'Partner Bank Digital Underwriting & Sanction Desk',
       subtitle: 'Live ShramScore underwriting, 12-mo amortization, sanction order generator',
       icon: Landmark,
       color: 'text-cyan-400 bg-cyan-500/10',

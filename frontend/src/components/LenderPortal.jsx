@@ -741,7 +741,7 @@ export default function LenderPortal({ workers = [], selectedWorker, onSelectWor
             </span>
             <pre className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-cyan-300 overflow-x-auto">
 {`curl -X GET "https://api.shramledger.in/api/v1/workers/worker_ramesh/income-summary" \\
-  -H "x-api-key: shram_sand_demo_sandbox_01" \\
+  -H "x-api-key: \${SHRAM_API_KEY}" \\
   -H "x-dpdp-purpose: LOAN_UNDERWRITING_MUDRA"`}
             </pre>
           </div>

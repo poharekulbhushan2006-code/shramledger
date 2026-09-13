@@ -215,10 +215,10 @@ def test_audit_logging():
 
 def test_enterprise_quote_generation():
     payload = {
-        "company_name": "Larsen & Toubro Construction Ltd",
-        "contact_name": "Anil Verma (Project Director)",
-        "email": "anil.verma@lntepc.com",
-        "phone": "+91 98111 44556",
+        "company_name": "Demo Infrastructure Pvt Ltd",
+        "contact_name": "Demo User",
+        "email": "demo@example.com",
+        "phone": "+91XXXXXXXXXX",
         "organization_type": "Construction EPC",
         "active_sites_count": 5,
         "estimated_workers": 1200,
@@ -228,7 +228,7 @@ def test_enterprise_quote_generation():
     res = client.post("/api/enterprise/quote", json=payload)
     assert res.status_code == 200
     data = res.json()
-    assert data["company_name"] == "Larsen & Toubro Construction Ltd"
+    assert data["company_name"] == "Demo Infrastructure Pvt Ltd"
     assert data["total_monthly_estimate"] > 0
     assert data["annual_discounted_total"] > 0
     assert len(data["features_included"]) >= 4
@@ -236,13 +236,13 @@ def test_enterprise_quote_generation():
 
 def test_bulk_muster_roll_ingestion():
     payload = {
-        "employer_id": "emp_lnt_01",
-        "employer_name": "L&T Delhi Metro Phase 4",
-        "site_name": "Mukundpur Depot Site",
+        "employer_id": "emp_demo_01",
+        "employer_name": "Demo Construction Site 01",
+        "site_name": "Demo Infrastructure Site 01",
         "records": [
             {
-                "worker_name": "Ramesh Kumar",
-                "phone": "+91 98765 43210",
+                "worker_name": "Demo Worker",
+                "phone": "+91XXXXXXXXXX",
                 "primary_trade": "Mason / राजमिस्त्री",
                 "hours_worked": 8.0,
                 "daily_wage": 850.0,
@@ -251,8 +251,8 @@ def test_bulk_muster_roll_ingestion():
                 "work_date": "2026-09-11"
             },
             {
-                "worker_name": "Sunita Devi",
-                "phone": "+91 98201 23456",
+                "worker_name": "Demo Helper",
+                "phone": "+91XXXXXXXXXX",
                 "primary_trade": "Helper / सहायक",
                 "hours_worked": 8.0,
                 "daily_wage": 700.0,

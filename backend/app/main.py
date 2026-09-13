@@ -1694,8 +1694,8 @@ def get_bocw_statutory_compliance_report(site_id: str = "site_delhi_metro_04"):
     return BOCWReportResponse(
         report_id=report_id,
         site_id=site_id,
-        site_name="Noida Sector 62 Infrastructure Extension Site",
-        contractor_name="Larsen & Toubro Infra Pvt Ltd",
+        site_name="Demo Infrastructure Site 01",
+        contractor_name="Demo Infrastructure Pvt Ltd",
         reporting_period="Fiscal Q2 2026",
         total_active_workers=active_workers,
         mandays_worked=mandays,

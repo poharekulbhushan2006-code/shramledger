@@ -25,10 +25,10 @@ export default function CommercialQuoteModal({ isOpen, onClose, initialTier = 'c
   const [workerCount, setWorkerCount] = useState(600);
   
   // Contact details
-  const [companyName, setCompanyName] = useState('Larsen & Toubro Infra Site 04');
-  const [contactName, setContactName] = useState('Anil Verma (Project Director)');
-  const [email, setEmail] = useState('anil.verma@lntepc.com');
-  const [phone, setPhone] = useState('+91 98111 22334');
+  const [companyName, setCompanyName] = useState('Demo Infrastructure Pvt Ltd');
+  const [contactName, setContactName] = useState('Demo User');
+  const [email, setEmail] = useState('demo@example.com');
+  const [phone, setPhone] = useState('+91XXXXXXXXXX');
   
   const [quoteData, setQuoteData] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);

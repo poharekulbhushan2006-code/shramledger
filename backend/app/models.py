@@ -350,9 +350,9 @@ class BulkMusterRow(BaseModel):
     worker_id: Optional[str] = None
 
 class BulkMusterRequest(BaseModel):
-    employer_id: str = "emp_lnt_01"
-    employer_name: str = "Larsen & Toubro Infra Site 04"
-    site_name: str = "Noida Sector 62 Metro Extension"
+    employer_id: str = "emp_demo_01"
+    employer_name: str = "Demo Infrastructure Pvt Ltd"
+    site_name: str = "Demo Infrastructure Site 01"
     records: List[BulkMusterRow]
     auto_anchor_ledger: bool = True
 
