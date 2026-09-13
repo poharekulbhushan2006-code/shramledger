@@ -62,50 +62,63 @@ function LoadingScreen() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#040810] flex flex-col items-center justify-center overflow-hidden">
-      <div className="orb orb-amber w-[500px] h-[500px] -top-32 -right-32 opacity-40" />
-      <div className="orb orb-emerald w-[400px] h-[400px] -bottom-24 -left-24 opacity-30" />
-      <div className="orb orb-indigo w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20" />
-      <div className="absolute inset-0 bg-grid opacity-100" />
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden" style={{background:'#f5f7fa'}}>
+      {/* Subtle background dots */}
+      <div className="absolute inset-0 bg-dots opacity-60" />
+      {/* Tricolor decorative orbs */}
+      <div className="orb orb-amber w-[400px] h-[400px] -top-24 -right-24 opacity-25" />
+      <div className="orb orb-emerald w-[350px] h-[350px] -bottom-20 -left-20 opacity-20" />
+      <div className="orb orb-indigo w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-15" />
 
       <div className="relative z-10 flex flex-col items-center space-y-8 px-8">
+        {/* Government Emblem */}
         <div className="relative">
-          <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-amber-500 via-orange-500 to-emerald-400 p-[2px] shadow-2xl shadow-amber-500/40 animate-glow-pulse">
-            <div className="w-full h-full bg-[#040810] rounded-[22px] flex items-center justify-center">
-              <ShieldCheck className="w-12 h-12 text-amber-400" />
+          <div className="w-24 h-24 rounded-2xl p-[3px] shadow-xl animate-glow-pulse" style={{background:'linear-gradient(135deg,#003087,#FF6B00)'}}>
+            <div className="w-full h-full rounded-[14px] flex items-center justify-center" style={{background:'#003087'}}>
+              <ShieldCheck className="w-12 h-12 text-white" />
             </div>
           </div>
-          <div className="absolute inset-0 flex items-center justify-center" style={{animation: 'orbit 2s linear infinite'}}>
-            <div className="absolute w-3 h-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50" style={{top: '-6px', left: '50%', marginLeft: '-6px'}} />
+          <div className="absolute inset-0 flex items-center justify-center" style={{animation: 'orbit 3s linear infinite'}}>
+            <div className="absolute w-3 h-3 rounded-full border-2 border-white" style={{top: '-6px', left: '50%', marginLeft: '-6px', background:'#FF6B00'}} />
           </div>
+        </div>
+
+        {/* Tricolor stripe */}
+        <div className="w-48 h-1.5 rounded-full overflow-hidden flex">
+          <div className="flex-1" style={{background:'#FF6B00'}} />
+          <div className="flex-1 bg-white border-y border-gray-200" />
+          <div className="flex-1" style={{background:'#138808'}} />
         </div>
 
         <div className="text-center">
-          <h1 className="text-4xl font-black tracking-tight text-shimmer font-['Outfit'] mb-2">
+          <h1 className="text-4xl font-black tracking-tight font-['Noto_Sans'] mb-1" style={{color:'#003087'}}>
             ShramLedger
           </h1>
-          <p className="text-slate-400 text-sm font-medium">
-            Tamper-Evident Employment & Income Verification Platform
+          <p className="text-base font-semibold mb-0.5" style={{color:'#FF6B00'}}>श्रमLedger</p>
+          <p className="text-sm text-gray-500 font-medium">
+            Digital Employment &amp; Income Verification Platform
           </p>
+          <p className="text-xs text-gray-400 mt-1">Ministry of Labour &amp; Employment · Government of India</p>
         </div>
 
-        <div className="w-72">
-          <div className="flex justify-between text-[10px] text-slate-500 font-mono mb-2">
+        {/* Progress Bar */}
+        <div className="w-80">
+          <div className="flex justify-between text-[10px] text-gray-400 font-mono mb-2">
             <span>{steps[stepIdx]}</span>
             <span>{progress}%</span>
           </div>
-          <div className="progress-bar h-1.5">
+          <div className="h-2 rounded-full overflow-hidden" style={{background:'#e8eef8', border:'1px solid #d0d9e8'}}>
             <div
-              className="progress-fill bg-gradient-to-r from-amber-500 via-orange-400 to-emerald-500"
-              style={{ width: `${progress}%` }}
+              className="h-full rounded-full transition-all duration-300"
+              style={{ width: `${progress}%`, background:'linear-gradient(90deg,#003087,#FF6B00)' }}
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-xs text-slate-500">
-          {['450M+ Workers', 'SHA-256 Merkle Ledger', 'DPDP Framework', '5 Languages'].map((stat) => (
+        <div className="flex items-center gap-6 text-xs text-gray-400">
+          {['450M+ Workers', 'SHA-256 Merkle', 'DPDP 2023', '5 Languages'].map((stat) => (
             <div key={stat} className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <div className="w-1.5 h-1.5 rounded-full" style={{background:'#003087'}} />
               <span>{stat}</span>
             </div>
           ))}
@@ -116,19 +129,20 @@ function LoadingScreen() {
 }
 
 // ─── Metric Badge Card ──────────────────────────────────────────────────
-function MetricBadge({ label, value, sub, accent = 'amber' }) {
+function MetricBadge({ label, value, sub, accent = 'navy' }) {
   const colorMap = {
-    amber: 'text-amber-300',
-    emerald: 'text-emerald-400',
-    teal: 'text-teal-400',
-    slate: 'text-slate-100',
-    cyan: 'text-cyan-400',
+    navy:    { color: '#003087', bg: '#e8eef8', border: '#a8b8d0' },
+    saffron: { color: '#FF6B00', bg: '#fff4ec', border: '#ffcca0' },
+    green:   { color: '#138808', bg: '#e8f5e6', border: '#9fd09b' },
+    amber:   { color: '#8a6000', bg: '#fff8e1', border: '#ffd54f' },
+    blue:    { color: '#004ba8', bg: '#e8eef8', border: '#90b0e0' },
   };
+  const c = colorMap[accent] || colorMap.navy;
   return (
-    <div className="premium-card p-4 rounded-2xl">
-      <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider block mb-1">{label}</span>
-      <span className={`text-lg font-extrabold ${colorMap[accent]} block leading-tight`}>{value}</span>
-      {sub && <span className="text-[10px] text-slate-500 mt-0.5 block">{sub}</span>}
+    <div className="gov-card p-4 rounded-md" style={{borderTopColor: c.color}}>
+      <span className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{color:'#6b7c9e'}}>{label}</span>
+      <span className="text-lg font-extrabold block leading-tight" style={{color: c.color}}>{value}</span>
+      {sub && <span className="text-[10px] mt-0.5 block" style={{color:'#9aaac0'}}>{sub}</span>}
     </div>
   );
 }
@@ -138,14 +152,17 @@ function TabButton({ active, onClick, icon: Icon, label, badge, activeClass }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 whitespace-nowrap ${
-        active ? `${activeClass} shadow-lg scale-105` : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
+      className={`flex items-center gap-2 px-4 py-2.5 rounded text-xs font-bold transition-all duration-200 whitespace-nowrap ${
+        active
+          ? 'text-white shadow-md'
+          : 'text-gray-500 hover:text-gray-800 hover:bg-blue-50'
       }`}
+      style={active ? {background:'#003087'} : {background:'#f0f4fb', border:'1px solid #d0d9e8'}}
     >
       <Icon className="w-4 h-4" />
       <span>{label}</span>
       {badge != null && (
-        <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono ${active ? 'bg-black/20 text-white/80' : 'bg-slate-950 text-slate-400'}`}>
+        <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${active ? 'bg-white/20 text-white/90' : 'bg-gray-200 text-gray-600'}`}>
           {badge}
         </span>
       )}
@@ -251,10 +268,10 @@ export default function App() {
 
   const HeroBg = () => (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      <div className="orb orb-amber w-[700px] h-[700px] -top-48 -right-48 opacity-25" />
-      <div className="orb orb-emerald w-[500px] h-[500px] -bottom-32 -left-32 opacity-20" />
-      <div className="orb orb-indigo w-[400px] h-[400px] top-1/2 -translate-y-1/2 left-1/3 opacity-12" />
-      <div className="absolute inset-0 bg-grid opacity-100" />
+      <div className="orb orb-amber w-[700px] h-[700px] -top-48 -right-48 opacity-15" />
+      <div className="orb orb-emerald w-[500px] h-[500px] -bottom-32 -left-32 opacity-10" />
+      <div className="orb orb-indigo w-[400px] h-[400px] top-1/2 -translate-y-1/2 left-1/3 opacity-10" />
+      <div className="absolute inset-0 bg-dots opacity-50" />
     </div>
   );
 
@@ -265,23 +282,24 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#040810] text-slate-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="min-h-screen flex flex-col font-sans" style={{background:'#f5f7fa', color:'#1a2642'}}>
       
       <HeroBg />
 
-      {/* Top Breadcrumb Strip */}
-      <div className="relative z-50 bg-[#040810]/95 border-b border-slate-800/40 py-1.5 px-4 flex items-center justify-between">
+      {/* Government Breadcrumb Strip */}
+      <div className="relative z-50 py-1.5 px-4 flex items-center justify-between" style={{background:'#eef1f6', borderBottom:'1px solid #d0d9e8'}}>
         <button
           onClick={() => setShowLanding(true)}
-          className="flex items-center gap-2 text-[11px] text-slate-400 hover:text-amber-400 transition-colors font-medium group"
+          className="flex items-center gap-2 text-[11px] font-medium group transition-colors"
+          style={{color:'#3d5280'}}
         >
-          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
-          Back to Overview
+          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" style={{color:'#003087'}} />
+          <span className="hover:underline" style={{color:'#003087'}}>Home &gt; Worker Dashboard</span>
         </button>
-        <div className="flex items-center gap-3 text-[10px] text-slate-400">
+        <div className="flex items-center gap-3 text-[10px]" style={{color:'#6b7c9e'}}>
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Live Production System (PostgreSQL / SQLite + SHA-256 Merkle Ledger)
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            Live System · SHA-256 Merkle Ledger · DPDP 2023 Compliant
           </span>
         </div>
       </div>

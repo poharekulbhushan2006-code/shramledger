@@ -15,7 +15,9 @@ import {
   ShieldAlert,
   UserPlus,
   CheckCircle2,
-  Search
+  Search,
+  Phone,
+  MapPin
 } from 'lucide-react';
 import { TRANSLATIONS } from '../utils/locales';
 
@@ -54,61 +56,99 @@ export default function Navbar({
   ];
 
   const PORTAL_MODES = [
-    { id: 'worker', label: 'Worker App', icon: Users, color: 'text-amber-400' },
-    { id: 'employer', label: 'Employer / Contractor', icon: Building2, color: 'text-emerald-400' },
-    { id: 'lender', label: 'Bank / Underwriting', icon: Landmark, color: 'text-cyan-400' },
-    { id: 'ngo', label: 'NGO / Govt Welfare', icon: Building, color: 'text-orange-400' },
-    { id: 'admin', label: 'Fraud & Audit', icon: ShieldAlert, color: 'text-red-400' },
-    { id: 'verifier', label: 'Public Verifier', icon: ShieldCheck, color: 'text-teal-400' }
+    { id: 'worker',   label: 'Worker App',          icon: Users,       activeColor: 'bg-white text-[#003087]' },
+    { id: 'employer', label: 'Employer / Contractor', icon: Building2,   activeColor: 'bg-white text-[#003087]' },
+    { id: 'lender',   label: 'Bank / NBFC',          icon: Landmark,    activeColor: 'bg-white text-[#003087]' },
+    { id: 'ngo',      label: 'NGO / Welfare',        icon: Building,    activeColor: 'bg-white text-[#003087]' },
+    { id: 'admin',    label: 'Fraud & Audit',        icon: ShieldAlert, activeColor: 'bg-white text-[#003087]' },
+    { id: 'verifier', label: 'Public Verifier',      icon: ShieldCheck, activeColor: 'bg-white text-[#003087]' }
   ];
 
   return (
     <>
-      <header
-        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-          isScrolled
-            ? 'navbar-premium shadow-2xl shadow-black/50'
-            : 'bg-[#040810]/95 backdrop-blur-2xl border-b border-white/5'
-        }`}
-      >
-        {/* Top accent line */}
-        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-amber-500/60 via-orange-500/40 to-transparent" />
+      {/* ── Tricolor Top Stripe ── */}
+      <div className="gov-top-stripe" />
 
+      {/* ── Government Header Band ── */}
+      <div className="gov-header-band">
+        <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-1">
+          <div className="flex items-center gap-3">
+            {/* Ashoka Chakra / Lion Capital SVG emblem */}
+            <svg className="w-6 h-6 text-white opacity-90" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="4" fill="none"/>
+              <circle cx="50" cy="50" r="8" fill="currentColor" opacity="0.8"/>
+              {/* 24 spokes */}
+              {Array.from({length:24}, (_,i) => {
+                const angle = (i * 360 / 24) * Math.PI / 180;
+                const x1 = 50 + 11 * Math.cos(angle);
+                const y1 = 50 + 11 * Math.sin(angle);
+                const x2 = 50 + 39 * Math.cos(angle);
+                const y2 = 50 + 39 * Math.sin(angle);
+                return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth="2" opacity="0.7"/>;
+              })}
+            </svg>
+            <span className="font-semibold text-white">
+              Ministry of Labour &amp; Employment &nbsp;|&nbsp; Government of India
+            </span>
+          </div>
+          <div className="flex items-center gap-4 text-white/80 text-[10px]">
+            <span className="hidden sm:flex items-center gap-1">
+              <MapPin className="w-3 h-3" /> Bharat Digital Infrastructure
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-green-400 inline-block animate-pulse" />
+              Portal Status: Active
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main Navigation ── */}
+      <header
+        className={`sticky top-0 z-50 w-full transition-all duration-200 ${
+          isScrolled
+            ? 'shadow-lg shadow-blue-900/20'
+            : ''
+        }`}
+        style={{ background: '#003087', borderBottom: '3px solid #FF6B00' }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-[68px] gap-3">
+          <div className="flex items-center justify-between h-[64px] gap-3">
 
             {/* ── Logo & Brand ── */}
             <div className="flex items-center space-x-3 min-w-0 flex-shrink-0">
               <div className="relative flex-shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-emerald-400 p-[1.5px] shadow-lg shadow-amber-500/30 animate-glow-pulse">
-                  <div className="w-full h-full bg-[#040810] rounded-[10px] flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5 text-amber-400" />
+                <div className="w-10 h-10 rounded-lg bg-white p-[2px] shadow-md animate-glow-pulse">
+                  <div className="w-full h-full bg-[#003087] rounded-md flex items-center justify-center">
+                    <ShieldCheck className="w-5 h-5 text-white" />
                   </div>
                 </div>
                 <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-[#040810]" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border border-white" />
                 </span>
               </div>
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg sm:text-xl font-black tracking-tight text-shimmer font-['Outfit']">
-                    {t.appName}
+                  <span className="text-lg sm:text-xl font-black tracking-tight text-white font-['Noto_Sans']">
+                    ShramLedger
                   </span>
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full">
+                  <span className="text-white/60 hidden sm:inline text-sm">|</span>
+                  <span className="text-white/80 hidden sm:inline text-sm font-medium">श्रमLedger</span>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-white/15 text-white border border-white/25 rounded-sm">
                     <Lock className="w-2.5 h-2.5" />
-                    Tamper-Evident Ledger
+                    Tamper-Evident
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-500 hidden md:block truncate max-w-[260px] leading-tight mt-0.5">
-                  Institutional Employment & Income Layer
+                <p className="text-[10px] text-white/55 hidden md:block truncate max-w-[280px] leading-tight mt-0.5">
+                  Digital Employment &amp; Income Verification Platform · DPDP 2023 Compliant
                 </p>
               </div>
             </div>
 
-            {/* ── Center: Multi-Persona Switcher ── */}
-            <div className="hidden xl:flex items-center gap-1 p-1 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-md">
+            {/* ── Center: Portal Mode Switcher ── */}
+            <div className="hidden xl:flex items-center gap-0.5 p-1 rounded-md bg-white/10 border border-white/20">
               {PORTAL_MODES.map((mode) => {
                 const Icon = mode.icon;
                 const isActive = viewMode === mode.id;
@@ -116,103 +156,102 @@ export default function Navbar({
                   <button
                     key={mode.id}
                     onClick={() => setViewMode(mode.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                      isActive 
-                        ? 'bg-slate-800 text-slate-100 shadow-md border border-slate-700' 
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+                      isActive
+                        ? 'bg-[#FF6B00] text-white shadow-sm'
+                        : 'text-white/75 hover:text-white hover:bg-white/15'
                     }`}
                   >
-                    <Icon className={`w-3.5 h-3.5 ${mode.color}`} />
+                    <Icon className="w-3.5 h-3.5" />
                     <span>{mode.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Mobile/Compact Persona Dropdown */}
+            {/* Mobile Persona Dropdown */}
             <div className="xl:hidden flex items-center">
               <select
                 value={viewMode}
                 onChange={(e) => setViewMode(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-amber-300 focus:outline-none"
+                className="px-3 py-1.5 rounded bg-white/10 border border-white/25 text-xs font-semibold text-white focus:outline-none"
               >
                 {PORTAL_MODES.map(m => (
-                  <option key={m.id} value={m.id}>{m.label}</option>
+                  <option key={m.id} value={m.id} className="bg-[#003087] text-white">{m.label}</option>
                 ))}
               </select>
             </div>
 
-            {/* ── Right: Proposal Quote + Register Worker + Worker Select + Lang ── */}
+            {/* ── Right Controls ── */}
             <div className="flex items-center gap-2">
 
-              {/* Command Palette Trigger */}
+              {/* Search */}
               <button
                 onClick={onOpenCommandPalette}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700/80 font-semibold text-xs transition-all hover:border-amber-500/40"
-                title="Open Command Console (Ctrl+K)"
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white/80 border border-white/20 font-medium text-xs transition-all hover:border-white/40"
+                title="Search (Ctrl+K)"
               >
-                <Search className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-slate-300 font-medium">Search</span>
-                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">
-                  ⌘K
-                </kbd>
+                <Search className="w-3.5 h-3.5" />
+                <span>Search</span>
+                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-white/60 border border-white/15">⌘K</kbd>
               </button>
 
-              {/* Commercial Quote Proposal Button */}
+              {/* Quote Button */}
               <button
                 onClick={onOpenQuote}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 font-bold text-xs transition-all hover:scale-105"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white border border-white/25 font-bold text-xs transition-all"
               >
-                <span>Pricing & Quote</span>
+                Pricing &amp; Quote
               </button>
 
-              {/* Onboard New Worker Button */}
+              {/* Register Worker — Saffron CTA */}
               <button
                 onClick={onOpenOnboarding}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded font-black text-xs shadow-md transition-all hover:scale-105"
+                style={{ background: '#FF6B00', color: '#fff', border: '1.5px solid #d45800' }}
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Register Worker</span>
               </button>
 
-              {/* Worker Profile Dropdown */}
+              {/* Worker Selector */}
               {viewMode === 'worker' && workers && workers.length > 0 && (
                 <div className="relative hidden md:block">
                   <button
                     onClick={() => setWorkerDropOpen(!workerDropOpen)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-700/70 text-slate-200 text-xs font-semibold hover:border-amber-500/40 hover:bg-slate-800/80 transition-all backdrop-blur-sm"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded bg-white/10 border border-white/25 text-white text-xs font-semibold hover:bg-white/20 transition-all"
                   >
                     <img
                       src={selectedWorker?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"}
                       alt={selectedWorker?.name}
-                      className="w-6 h-6 rounded-lg object-cover"
+                      className="w-6 h-6 rounded object-cover border border-white/30"
                     />
                     <span className="max-w-[100px] truncate">{selectedWorker?.name}</span>
-                    <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${workerDropOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3 h-3 text-white/60 transition-transform duration-200 ${workerDropOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {workerDropOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 glass-card rounded-2xl p-2 shadow-2xl shadow-black/50 z-50 animate-scale-in">
-                      <p className="text-[9px] text-slate-500 uppercase tracking-widest px-2 pb-2 font-bold border-b border-slate-800 mb-2">
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg p-2 shadow-xl z-50 animate-scale-in">
+                      <p className="text-[9px] text-gray-400 uppercase tracking-widest px-2 pb-2 font-bold border-b border-gray-100 mb-2">
                         {t.selectWorker}
                       </p>
                       {workers.map((w) => (
                         <button
                           key={w.id}
                           onClick={() => { setSelectedWorker(w); setWorkerDropOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left text-xs group ${
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-all text-left text-xs group ${
                             selectedWorker?.id === w.id
-                              ? 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
-                              : 'hover:bg-slate-800/80 text-slate-300 hover:text-slate-100'
+                              ? 'bg-blue-50 border border-blue-200 text-blue-900'
+                              : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
                           }`}
                         >
-                          <img src={w.avatar_url} alt={w.name} className="w-8 h-8 rounded-xl object-cover border border-slate-700 group-hover:border-amber-500/30 transition-colors" />
+                          <img src={w.avatar_url} alt={w.name} className="w-8 h-8 rounded object-cover border border-gray-200" />
                           <div className="min-w-0">
-                            <p className="font-bold truncate">{w.name}</p>
-                            <p className="text-[10px] text-slate-500 truncate">{w.primary_trade.split('/')[0].trim()} • {w.city}</p>
+                            <p className="font-bold truncate text-gray-900">{w.name}</p>
+                            <p className="text-[10px] text-gray-400 truncate">{w.primary_trade.split('/')[0].trim()} · {w.city}</p>
                           </div>
                           {selectedWorker?.id === w.id && (
-                            <ShieldCheck className="w-3.5 h-3.5 text-amber-400 ml-auto shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 ml-auto shrink-0" />
                           )}
                         </button>
                       ))}
@@ -222,44 +261,44 @@ export default function Navbar({
               )}
 
               {/* Language Selector */}
-              <div className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/80 border border-slate-700/70 text-xs text-slate-300 hover:border-slate-600 transition-colors backdrop-blur-sm">
-                <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <div className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-white/10 border border-white/20 text-xs text-white hover:bg-white/20 transition-colors">
+                <Globe className="w-3.5 h-3.5 shrink-0 text-white/80" />
                 <select
                   value={currentLang}
                   onChange={(e) => setLang(e.target.value)}
-                  className="bg-transparent text-slate-200 text-xs focus:outline-none cursor-pointer appearance-none pr-1"
+                  className="bg-transparent text-white text-xs focus:outline-none cursor-pointer appearance-none pr-1"
                 >
                   {languages.map((l) => (
-                    <option key={l.code} value={l.code} className="bg-slate-900 text-slate-200">
-                      {l.label}
-                    </option>
+                    <option key={l.code} value={l.code} className="bg-[#003087] text-white">{l.label}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Mobile Menu Toggle */}
+              {/* Mobile Toggle */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="xl:hidden p-2 rounded-xl bg-slate-900/80 border border-slate-700/70 text-slate-400 hover:text-slate-200 transition-all"
+                className="xl:hidden p-2 rounded bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
               >
                 {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
               </button>
-
             </div>
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* Mobile Dropdown */}
         {mobileOpen && (
-          <div className="xl:hidden glass-dark border-t border-white/5 px-4 pb-4 pt-3 space-y-3 animate-slide-up">
+          <div className="xl:hidden border-t border-white/10 px-4 pb-4 pt-3 space-y-3 animate-slide-up" style={{background:'#001f5e'}}>
             <div className="grid grid-cols-2 gap-2">
               {PORTAL_MODES.map((mode) => (
                 <button
                   key={mode.id}
                   onClick={() => { setViewMode(mode.id); setMobileOpen(false); }}
-                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold ${
-                    viewMode === mode.id ? 'bg-slate-800 text-amber-300 border border-amber-500/30' : 'bg-slate-900 text-slate-400'
+                  className={`flex items-center gap-2 p-2.5 rounded text-xs font-bold transition-all ${
+                    viewMode === mode.id
+                      ? 'text-white'
+                      : 'bg-white/10 text-white/70'
                   }`}
+                  style={viewMode === mode.id ? {background:'#FF6B00'} : {}}
                 >
                   <mode.icon className="w-4 h-4" />
                   <span>{mode.label}</span>
@@ -270,7 +309,7 @@ export default function Navbar({
         )}
       </header>
 
-      {/* Backdrop to close dropdowns */}
+      {/* Backdrop */}
       {workerDropOpen && (
         <div className="fixed inset-0 z-40" onClick={() => setWorkerDropOpen(false)} />
       )}
