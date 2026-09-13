@@ -1,14 +1,38 @@
 # 🇮🇳 ShramLedger (श्रमLedger)
 ### **Workforce Credentialing & Alternative Credit Intelligence Platform — Prototype**
 
-[![Prototype Status](https://img.shields.io/badge/Status-Functional%20Prototype%20%2F%20Developer%20Sandbox-blue?logo=flask&logoColor=white)](https://github.com/)
+[![CI Pipeline](https://github.com/poharekulbhushan2006-code/shramledger/actions/workflows/test.yml/badge.svg)](https://github.com/poharekulbhushan2006-code/shramledger/actions)
+[![Prototype Status](https://img.shields.io/badge/Status-Prototype%20%2F%20Demonstration%20MVP-blue?logo=flask&logoColor=white)](https://github.com/)
+[![Version](https://img.shields.io/badge/Version-0.1.0-orange)](https://github.com/)
 [![React 19](https://img.shields.io/badge/Frontend-React%2019%20%2B%20Vite%208-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20%2B%20Python%203.11-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Real OCR](https://img.shields.io/badge/Vision%20Pipeline-OpenCV%20%2B%20RapidOCR%20(ONNX)-orange?logo=opencv&logoColor=white)](https://github.com/RapidAI/RapidOCR)
+[![Real OCR](https://img.shields.io/badge/Vision%20Pipeline-OpenCV%20%2B%20RapidOCR%20(ONNX)-emerald?logo=opencv&logoColor=white)](https://github.com/RapidAI/RapidOCR)
 [![Cryptography](https://img.shields.io/badge/Security-SHA--256%20Merkle%20DAG-orange?logo=blockchaindotcom&logoColor=white)](https://en.wikipedia.org/wiki/Merkle_tree)
 [![Compliance](https://img.shields.io/badge/Statutory-DPDP%202023%20%7C%20BOCW%201996-blue)](https://labour.gov.in/)
 [![Tests](https://img.shields.io/badge/Tests-24%2F24%20Passing-brightgreen?logo=pytest&logoColor=white)](backend/tests/)
-[![License](https://img.shields.io/badge/License-MIT%20Open%20Source-purple.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+
+---
+
+## 🧭 Capabilities Matrix: Implemented vs Prototype vs Roadmap
+
+To maintain engineering transparency, the table below delineates what is **production-tested code**, what operates as a **functional prototype simulation**, and what is on the **engineering roadmap**:
+
+| Capability Area | Status | Technical Implementation |
+|---|---|---|
+| **Computer Vision & OCR** | 🟢 **Implemented (Real Code)** | OpenCV (Grayscale + CLAHE + Blur + Otsu) + RapidOCR (ONNX Runtime deep learning) for text bounding boxes & Indic entity regex extraction. |
+| **Merkle Tree DAG Ledger** | 🟢 **Implemented (Real Code)** | FIPS 180-4 standard SHA-256 cryptographic leaf-to-root recalculation with real-time tamper violation detection. |
+| **ShramScore™ Engine** | 🟢 **Implemented (Real Code)** | **Explainable Credit Scoring Engine** using 6 transparent weighted dimensions (300–900 scale, non-blackbox). |
+| **Multi-Vector Fraud Audit** | 🟢 **Implemented (Real Code)** | Heuristic auditing detecting shift collisions, >4x wage outliers, and duplicate document hashes with human-review triage. |
+| **Statutory Wage Baselines** | 🟢 **Implemented (Real Code)** | Regional minimum wage checks (Delhi, UP, Haryana baselines) for Skilled, Semi-Skilled, and Unskilled trades. |
+| **DPDP Act 2023 Consent** | 🟢 **Implemented (Real Code)** | Purpose-specific consent tokens (`CONSENT-DPDP-2026-XXXX`) with cryptographic SHA-256 verification and revocation endpoints. |
+| **Persistent Data Storage** | 🟢 **Implemented (Real Code)** | SQLite relational storage via SQLAlchemy ORM with foreign key cascades and audit logs. |
+| **Automated Test Suite** | 🟢 **Implemented (Real Code)** | 24 end-to-end automated pytest suites passing in CI (100% pass rate). |
+| **Lender Underwriting Portal** | 🟡 **Prototype / Sandbox** | Interactive underwriting terminal simulating risk policy evaluation and Mudra loan readiness cards. |
+| **Contractor Bulk Muster** | 🟡 **Prototype / Sandbox** | Bulk site register CSV ingestion, batch Merkle root calculation, and Form XXIX inspection preview. |
+| **SMS OTP Verification** | 🟡 **Prototype / Sandbox** | Simulated OTP verification flow with ephemeral in-memory store for demonstration purposes. |
+| **Account Aggregator (AA)** | ⚪ **Planned Roadmap** | Production bridge to RBI Account Aggregator ecosystem for seamless consent-backed lender pulls. |
+| **State Cloud Deployment** | ⚪ **Planned Roadmap** | Air-gapped State Data Centre (SDC) deployment and sovereign multi-tenant orchestration. |
 
 ---
 
