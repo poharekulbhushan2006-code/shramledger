@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShramLedger - Technical Architecture & Engineering Breakdown</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #040810;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.3);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.3);
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.3);
+      --purple: #a855f7;
+      --red: #ef4444;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --dim: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Ambient dynamic glow orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      transition: all 1.2s ease;
+    }
+    .orb-1 { width: 500px; height: 500px; background: rgba(6, 182, 212, 0.12); top: -100px; right: -100px; }
+    .orb-2 { width: 450px; height: 450px; background: rgba(168, 85, 247, 0.10); bottom: -100px; left: -100px; }
+    .orb-3 { width: 350px; height: 350px; background: rgba(16, 185, 129, 0.08); top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+    /* Top Progress Bar */
+    .progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      z-index: 100;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--purple), var(--emerald));
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 12px var(--cyan-glow);
+    }
+
+    /* Header Nav */
+    .presentation-header {
+      position: relative;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 36px;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(4, 8, 16, 0.6);
+      backdrop-filter: blur(16px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 16px var(--cyan-glow);
+    }
+    .brand-text h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .brand-text span {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .slide-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--cyan);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan), #2563eb);
+      color: #fff;
+      border: none;
+      box-shadow: 0 0 14px var(--cyan-glow);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 20px var(--cyan-glow);
+      transform: translateY(-1px);
+    }
+
+    /* Slide Deck Stage */
+    .deck-stage {
+      flex: 1;
+      position: relative;
+      z-index: 10;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 36px;
+    }
+    .slide-container {
+      width: 100%;
+      max-width: 1280px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Slide Item */
+    .slide {
+      display: none;
+      opacity: 0;
+      transform: scale(0.96) translateY(16px);
+      transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+      width: 100%;
+    }
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      animation: slideIn 0.5s forwards ease-out;
+    }
+
+    @keyframes slideIn {
+      0% { opacity: 0; transform: scale(0.97) translateY(12px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Slide Typography */
+    .slide-tag {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--cyan);
+      margin-bottom: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .slide-tag::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+    }
+    .slide-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff 40%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .slide-subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 860px;
+      margin-bottom: 26px;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      gap: 20px;
+      width: 100%;
+    }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+    .card-accent-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .accent-amber { background: linear-gradient(90deg, var(--amber), transparent); }
+    .accent-emerald { background: linear-gradient(90deg, var(--emerald), transparent); }
+    .accent-cyan { background: linear-gradient(90deg, var(--cyan), transparent); }
+    .accent-purple { background: linear-gradient(90deg, var(--purple), transparent); }
+    .accent-red { background: linear-gradient(90deg, var(--red), transparent); }
+
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+      display: inline-block;
+    }
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .card-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .card-list li {
+      font-size: 12px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.45;
+    }
+    .card-list li::before {
+      content: '⚡';
+      color: var(--cyan);
+      font-size: 11px;
+      margin-top: 1px;
+    }
+
+    /* Code Highlight Box */
+    .code-box {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: #38bdf8;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+    .code-box .kw { color: #f43f5e; font-weight: 600; }
+    .code-box .fn { color: #38bdf8; }
+    .code-box .str { color: #a3e635; }
+    .code-box .comment { color: #64748b; font-style: italic; }
+
+    .tag-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .tag-react { background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .tag-python { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .tag-crypto { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .tag-db { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+
+    /* Footer Controls */
+    .presentation-footer {
+      position: relative;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 36px;
+      border-top: 1px solid var(--card-border);
+      background: rgba(4, 8, 16, 0.6);
+      backdrop-filter: blur(16px);
+    }
+    .keyboard-tips {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 11px;
+      color: var(--dim);
+    }
+    .kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: scale(1.05);
+    }
+    .nav-btn:active { transform: scale(0.95); }
+
+    /* Animated pulse dot */
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+      animation: pulse 1.6s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient background glow orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Top Progress Bar -->
+  <div class="progress-track">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="presentation-header">
+    <a href="index.html" class="brand">
+      <div class="brand-logo">⚙️</div>
+      <div class="brand-text">
+        <h2>ShramLedger (श्रमLedger)</h2>
+        <span>Engineering & Technical Deep-Dive</span>
+      </div>
+    </a>
+    <div class="slide-badge">
+      <span class="pulse-dot"></span>
+      <span id="slideCounter">SLIDE 01 / 12</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-action" onclick="toggleFullScreen()">⛶ Fullscreen [F]</button>
+      <a href="ShramLedger_Technical_Architecture.pptx" download class="btn-action btn-primary">⬇ Download .PPTX</a>
+    </div>
+  </header>
+
+  <!-- Main Slide Deck Stage -->
+  <main class="deck-stage">
+    <div class="slide-container">
+
+      <!-- SLIDE 1: Title Slide -->
+      <section class="slide active" data-index="1">
+        <span class="slide-tag">Technical Architecture Deep-Dive</span>
+        <h1 class="slide-title" style="font-size: 52px; line-height: 1.1; margin-bottom: 14px;">
+          Under the Hood of ShramLedger
+        </h1>
+        <p class="slide-subtitle" style="font-size: 20px; max-width: 900px; margin-bottom: 36px; color: #cbd5e1;">
+          Fullstack Engineering, Cryptographic Pipelines, Component Hierarchy & Production Deployment.
+          How Python FastAPI, React 19, and SHA-256 Merkle Trees power Bharat's informal workforce platform.
+        </p>
+        <div class="cards-grid grid-4">
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <span class="tag-badge tag-react">Frontend Architecture</span>
+            <div class="card-title">React 19 + Vite 8</div>
+            <p class="card-desc">Modern concurrent rendering, Tailwind CSS v4 tokens, and 19 modular components.</p>
+            <div class="code-box"><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span>;</div>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <span class="tag-badge tag-python">Backend Engine</span>
+            <div class="card-title">FastAPI + Python 3.10+</div>
+            <p class="card-desc">High-concurrency async ASGI server with strict Pydantic v2 data models.</p>
+            <div class="code-box"><span class="kw">app</span> = FastAPI(title=<span class="str">"ShramLedger API"</span>)</div>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-crypto"></div>
+            <span class="tag-badge tag-crypto">Cryptographic Core</span>
+            <div class="card-title">SHA-256 Merkle DAG</div>
+            <p class="card-desc">Deterministic leaf hashing, recursive parent pairing, and O(log N) inclusion proofs.</p>
+            <div class="code-box"><span class="fn">hashlib</span>.sha256(canonical_json).hexdigest()</div>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-purple"></div>
+            <span class="tag-badge tag-db">Data Persistence</span>
+            <div class="card-title">SQLAlchemy 2.0</div>
+            <p class="card-desc">Relational schema with SQLite/Postgres dual-engine and auto-migration.</p>
+            <div class="code-box"><span class="kw">class</span> <span class="fn">Worker</span>(Base): __tablename__ = ...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: High-Level System Architecture -->
+      <section class="slide" data-index="2">
+        <span class="slide-tag">System Topology</span>
+        <h2 class="slide-title">End-to-End System Architecture</h2>
+        <p class="slide-subtitle">A decoupled client-server architecture with cryptographic consensus and resilient failover.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">💻</div>
+            <div class="card-title">1. Presentation Layer</div>
+            <p class="card-desc">Single Page Application (SPA) hosted on Vercel Edge with zero-latency global routing.</p>
+            <ul class="card-list">
+              <li>Built with Vite 8 + Rolldown bundling</li>
+              <li>Dynamic API base resolution with fallback</li>
+              <li>Web Speech API & jsPDF client-side processing</li>
+              <li>Tailwind CSS v4 glassmorphic theme (#040810)</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">⚡</div>
+            <div class="card-title">2. Application Core</div>
+            <p class="card-desc">FastAPI microservice executing business logic, scoring, and cryptographic verification.</p>
+            <ul class="card-list">
+              <li>Pydantic v2 DTO validation and typing</li>
+              <li>Modular engines: Ledger, Scorer, OCR, Fraud</li>
+              <li>Asynchronous route handlers for high throughput</li>
+              <li>CORS and DPDP purpose-bound middleware</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">💾</div>
+            <div class="card-title">3. Ledger & Database</div>
+            <p class="card-desc">Dual storage combining relational models with an immutable cryptographic ledger.</p>
+            <ul class="card-list">
+              <li>SQLAlchemy 2.0 ORM with connection pooling</li>
+              <li>SQLite (local/edge) & PostgreSQL (cloud enterprise)</li>
+              <li>SHA-256 Merkle root generation & leaf proofs</li>
+              <li>Append-only immutable audit trail</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: Technologies & Coding Languages Used -->
+      <section class="slide" data-index="3">
+        <span class="slide-tag">Tech Stack & Languages</span>
+        <h2 class="slide-title">Languages, Frameworks & Libraries</h2>
+        <p class="slide-subtitle">Modern stack chosen specifically for developer velocity, execution speed, and cryptographic security.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-title">Frontend Stack</div>
+            <p class="card-desc">React 19 & Tailwind CSS v4</p>
+            <ul class="card-list">
+              <li><strong>React 19:</strong> State hooks, concurrent transitions</li>
+              <li><strong>Vite 8:</strong> Sub-second bundling & HMR</li>
+              <li><strong>Tailwind CSS v4:</strong> Zero-runtime CSS tokens</li>
+              <li><strong>Lucide React:</strong> Consistent institutional icons</li>
+              <li><strong>QRCode.react:</strong> Real-time credential QR codes</li>
+              <li><strong>jsPDF + HTML2Canvas:</strong> Client PDF export</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-title">Backend Stack</div>
+            <p class="card-desc">Python 3.10+ & FastAPI</p>
+            <ul class="card-list">
+              <li><strong>FastAPI & Uvicorn:</strong> Async ASGI framework</li>
+              <li><strong>Pydantic v2:</strong> High-speed C-based validation</li>
+              <li><strong>SQLAlchemy 2.0:</strong> Relational schema ORM</li>
+              <li><strong>PyCA Cryptography:</strong> SHA-256 & HMAC algorithms</li>
+              <li><strong>Pillow (PIL):</strong> Image contrast enhancement</li>
+              <li><strong>pytest + httpx:</strong> End-to-end test suite</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-purple"></div>
+            <div class="card-title">Languages & Cloud</div>
+            <p class="card-desc">Multi-Paradigm Engineering</p>
+            <ul class="card-list">
+              <li><strong>JavaScript (ES2024):</strong> Frontend logic & events</li>
+              <li><strong>Python:</strong> Cryptographic algorithms & backend</li>
+              <li><strong>SQL:</strong> Relational queries, foreign keys, indexes</li>
+              <li><strong>HTML5 / CSS3:</strong> Semantic structure & animations</li>
+              <li><strong>Vercel Global Edge:</strong> Static SPA hosting</li>
+              <li><strong>Render / Railway:</strong> Containerized backend</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: Frontend Component Architecture (All 19 Components) -->
+      <section class="slide" data-index="4">
+        <span class="slide-tag">Component Architecture</span>
+        <h2 class="slide-title">Decomposition of All 19 React Components</h2>
+        <p class="slide-subtitle">Modular, decoupled component architecture organized into 4 distinct functional layers.</p>
+        <div class="cards-grid grid-4">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <span class="tag-badge tag-react">Shell & Nav</span>
+            <div class="card-title">Core & Shell</div>
+            <ul class="card-list">
+              <li><strong>App.jsx:</strong> Root coordinator, state, keyboard hooks</li>
+              <li><strong>LandingPage.jsx:</strong> Hero, stats counter, role switches</li>
+              <li><strong>Navbar.jsx:</strong> Role switcher, language dropdown</li>
+              <li><strong>CommandPaletteModal.jsx:</strong> Global search (Ctrl+K)</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <span class="tag-badge tag-react">Portals</span>
+            <div class="card-title">B2B Consoles</div>
+            <ul class="card-list">
+              <li><strong>EmployerPortal.jsx:</strong> Muster rolls, payouts</li>
+              <li><strong>LenderPortal.jsx:</strong> Underwriting, API keys</li>
+              <li><strong>NgoGovPortal.jsx:</strong> Welfare analytics, BOCW</li>
+              <li><strong>AdminFraudDashboard.jsx:</strong> Anomaly radar</li>
+              <li><strong>PublicVerifier.jsx:</strong> QR validation terminal</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <span class="tag-badge tag-react">Visualizers</span>
+            <div class="card-title">Worker Views</div>
+            <ul class="card-list">
+              <li><strong>ShramScoreCard.jsx:</strong> 300-900 score gauge</li>
+              <li><strong>LedgerTimeline.jsx:</strong> Immutable entry cards</li>
+              <li><strong>IncomeCertificate.jsx:</strong> PDF certificate</li>
+              <li><strong>SchemeMatcher.jsx:</strong> Welfare enrollment</li>
+              <li><strong>MerkleDagVisualizer.jsx:</strong> DAG tree & sandbox</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-purple"></div>
+            <span class="tag-badge tag-react">Ingestion</span>
+            <div class="card-title">Modals & Inputs</div>
+            <ul class="card-list">
+              <li><strong>VoiceLogger.jsx:</strong> Speech API recorder</li>
+              <li><strong>DocumentScanner.jsx:</strong> OCR image parser</li>
+              <li><strong>AddEntryModal.jsx:</strong> Wage form & floor</li>
+              <li><strong>OnboardingModal.jsx:</strong> DPDP OTP consent</li>
+              <li><strong>ContractorEndorseModal.jsx:</strong> OTP action</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: State Management & Localization -->
+      <section class="slide" data-index="5">
+        <span class="slide-tag">State & Internationalization</span>
+        <h2 class="slide-title">Reactive State & 5-Language Localization</h2>
+        <p class="slide-subtitle">Centralized React state with zero external library overhead and native Indic language support.</p>
+        <div class="cards-grid grid-2">
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">🔄</div>
+            <div class="card-title">Reactive State Flow</div>
+            <p class="card-desc">A centralized state tree in <code>App.jsx</code> powers all subordinate portals with optimistic updates.</p>
+            <ul class="card-list">
+              <li><code>selectedWorker</code>: Drives profile card, Merkle DAG, score radar, and certificates.</li>
+              <li><code>viewMode</code>: Toggles between Worker, Employer, Lender, NGO, Admin, and Verifier.</li>
+              <li>Global Keyboard Hooks: <code>Ctrl+K</code> opens command palette, <code>Esc</code> dismisses modals.</li>
+              <li>Optimistic Updates: New wage entries appear on the timeline instantly before backend round-trip.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">🌐</div>
+            <div class="card-title">5-Language Indic Localization (locales.js)</div>
+            <p class="card-desc">Cultural dictionary-based translation system optimized for vernacular informal terms.</p>
+            <ul class="card-list">
+              <li><strong>Supported:</strong> Hindi (हिन्दी), English, Marathi (मराठी), Bengali (বাংলা), Telugu (తెలుగు).</li>
+              <li>Contextual labor terms: 'राजमिस्त्री' (Mason), 'मजदूरी' (Wage), 'ठेकेदार' (Contractor).</li>
+              <li>Dynamic font switching: Uses Google Noto Sans Devanagari for crisp Indic rendering.</li>
+              <li>Zero performance penalty: Static locale maps load in sub-millisecond time.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: API Service Layer & High-Availability Fallback -->
+      <section class="slide" data-index="6">
+        <span class="slide-tag">Network Architecture</span>
+        <h2 class="slide-title">The API Service Layer & Resilient Fallback</h2>
+        <p class="slide-subtitle">Decoupled environment configuration enabling seamless live demonstrations on static hosting.</p>
+        <div class="cards-grid grid-2">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">🔌</div>
+            <div class="card-title">Dynamic Environment Resolution</div>
+            <p class="card-desc">Reads <code>VITE_API_BASE_URL</code> at build/runtime with smart default fallback to <code>/api</code>.</p>
+            <div class="code-box">
+              <span class="kw">const</span> RAW_API_BASE = import.meta.env.VITE_API_BASE_URL || <span class="str">'/api'</span>;<br>
+              <span class="kw">const</span> API_BASE = RAW_API_BASE.replace(<span class="str">/\/+$/</span>, <span class="str">''</span>);
+            </div>
+            <ul class="card-list" style="margin-top: 14px;">
+              <li>Automatic adaptation: Local proxy in dev, Render/Railway in production.</li>
+              <li>Request Timeout Guard: 6,000ms AbortController prevents hanging promises.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🛡️</div>
+            <div class="card-title">Resilient Mock Fallback (mockData.js)</div>
+            <p class="card-desc">When the live backend is unreachable or booting up, the client gracefully serves the demo dataset.</p>
+            <div class="code-box">
+              <span class="kw">async function</span> <span class="fn">safeFetch</span>(url, options, fallback) {<br>
+              &nbsp;&nbsp;<span class="kw">try</span> { <span class="kw">const</span> res = <span class="kw">await</span> fetch(...); <span class="kw">if</span> (res.ok) <span class="kw">return</span> res.json(); }<br>
+              &nbsp;&nbsp;<span class="kw">catch</span> (_) { <span class="comment">/* Network failure / offline */</span> }<br>
+              &nbsp;&nbsp;<span class="kw">return</span> fallback;<br>
+              }
+            </div>
+            <ul class="card-list" style="margin-top: 14px;">
+              <li>Guarantees the Vercel site is 100% functional and interactive 24/7.</li>
+              <li>Pre-populated with Ramesh Kumar, Sunita Devi, and Vikram Singh profiles.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: Backend FastAPI & Relational Models -->
+      <section class="slide" data-index="7">
+        <span class="slide-tag">Backend Engineering</span>
+        <h2 class="slide-title">FastAPI Service Layer & SQLAlchemy Models</h2>
+        <p class="slide-subtitle">High-throughput REST API with clean separation between Pydantic schemas and relational models.</p>
+        <div class="cards-grid grid-2">
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">⚡</div>
+            <div class="card-title">FastAPI Routes & Dependency Injection</div>
+            <ul class="card-list">
+              <li><code>GET /workers</code> & <code>GET /workers/{id}</code>: Profile retrieval & trade categorization.</li>
+              <li><code>POST /entries/{worker_id}</code>: Cryptographic micro-attestation logging.</li>
+              <li><code>GET /score/{worker_id}</code>: Real-time calculation of the 300–900 ShramScore.</li>
+              <li><code>GET /v1/workers/{id}/income-summary</code>: DPDP-gated underwriting REST API.</li>
+              <li><code>POST /employer/action</code>: OTP-verified contractor wage endorsement.</li>
+              <li><code>GET /admin/fraud-alerts</code>: Statistical anomaly & wage dispersion queue.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-purple"></div>
+            <div class="card-icon">🗄️</div>
+            <div class="card-title">SQLAlchemy Relational Schema (db_models.py)</div>
+            <ul class="card-list">
+              <li><strong>Worker & WorkerProfile:</strong> Demographics, skill tier, masked Aadhaar/UAN.</li>
+              <li><strong>WorkEntry:</strong> Daily wage, hours, contractor phone, SHA-256 entry hash.</li>
+              <li><strong>Employer:</strong> Enterprise contractors, authorized signatory phones, tax IDs.</li>
+              <li><strong>ConsentRecord:</strong> DPDP purpose, granted timestamp, TTL, revocation status.</li>
+              <li><strong>AuditLog:</strong> Append-only log of every credential verification and token request.</li>
+              <li><strong>Auto-Migration:</strong> Self-healing lightweight column migrations on startup.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: Cryptographic Merkle Math (ledger.py) -->
+      <section class="slide" data-index="8">
+        <span class="slide-tag">Cryptographic Math</span>
+        <h2 class="slide-title">Merkle Tree Construction & Math (ledger.py)</h2>
+        <p class="slide-subtitle">Mathematical implementation of the tamper-evident hash tree algorithm.</p>
+        <div class="cards-grid grid-2">
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">📐</div>
+            <div class="card-title">Recursive Construction Algorithm</div>
+            <p class="card-desc">Entries are hashed deterministically and combined in pairs up to the single Merkle Root.</p>
+            <div class="code-box">
+              <span class="comment"># 1. Leaf Hash</span><br>
+              leaf_hash = hashlib.sha256(canonical_json(entry)).hexdigest()<br><br>
+              <span class="comment"># 2. Recursive Level Pairing</span><br>
+              <span class="kw">for</span> i <span class="kw">in</span> range(0, len(nodes), 2):<br>
+              &nbsp;&nbsp;combined = nodes[i] + nodes[i + 1]<br>
+              &nbsp;&nbsp;parents.append(hashlib.sha256(combined.encode()).hexdigest())
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">🔍</div>
+            <div class="card-title">Proof of Inclusion & Verification</div>
+            <p class="card-desc">Lenders can verify any individual wage record in O(log N) operations using co-hashes.</p>
+            <div class="code-box">
+              <span class="comment"># Audit Path Verification</span><br>
+              current_hash = target_leaf_hash<br>
+              <span class="kw">for</span> sibling_hash, is_left <span class="kw">in</span> audit_path:<br>
+              &nbsp;&nbsp;pair = (sibling_hash + current_hash) <span class="kw">if</span> is_left <span class="kw">else</span> (current_hash + sibling_hash)<br>
+              &nbsp;&nbsp;current_hash = hashlib.sha256(pair.encode()).hexdigest()<br>
+              <span class="kw">assert</span> current_hash == expected_merkle_root
+            </div>
+            <ul class="card-list" style="margin-top: 10px;">
+              <li>Zero personal data disclosure required for verification.</li>
+              <li>1,024 work entries require only 10 hashes to prove validity.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: Multimodal AI & OCR Pipelines -->
+      <section class="slide" data-index="9">
+        <span class="slide-tag">AI & Computer Vision</span>
+        <h2 class="slide-title">Speech NLP Engine & OCR Document Pipeline</h2>
+        <p class="slide-subtitle">Translating spoken Indic dialects and physical site chits into structured ledger records.</p>
+        <div class="cards-grid grid-2">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">🎙️</div>
+            <div class="card-title">IndicSpeechNLPEngine (speech_nlp_engine.py)</div>
+            <p class="card-desc">Natural language understanding tailored for regional construction and domestic work dialects.</p>
+            <ul class="card-list">
+              <li><strong>Phonetic Dialect Normalizer:</strong> Handles code-switched Hindi, Bhojpuri, Hinglish.</li>
+              <li><strong>Slot Filling NER:</strong> Extracts wage amount, hours worked, trade, and contractor name.</li>
+              <li><strong>Regex Number Fallbacks:</strong> Maps colloquial Hindi words (<em>"आठ सौ पचास", "हजार"</em>) to numeric floats.</li>
+              <li><strong>Confidence Metric:</strong> Calculates composite acoustic and syntactic confidence (0-100%).</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📄</div>
+            <div class="card-title">OCREngine (ocr_engine.py)</div>
+            <p class="card-desc">Computer vision pipeline converting paper slips and UPI mobile screenshots into validated data.</p>
+            <ul class="card-list">
+              <li><strong>Pillow Image Enhancement:</strong> Grayscale conversion, contrast stretching, and adaptive thresholding.</li>
+              <li><strong>Chit Heuristic Parser:</strong> Identifies contractor stamps, daily wage rates, and work dates.</li>
+              <li><strong>UPI Regex Matcher:</strong> Scans for 12-digit Bank Reference Numbers (UTR) and "Payment Successful".</li>
+              <li><strong>Evidence Grading:</strong> Classifies entries into Platinum, Gold, Silver, or Bronze strength bands.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: Credit Scoring & Anomaly Detection Algorithms -->
+      <section class="slide" data-index="10">
+        <span class="slide-tag">Data Science & Security</span>
+        <h2 class="slide-title">ShramScore Formula & Statistical Fraud Radar</h2>
+        <p class="slide-subtitle">Mathematical rigor ensuring bank-grade risk assessment and fraud resistance.</p>
+        <div class="cards-grid grid-2">
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🧮</div>
+            <div class="card-title">CreditScorer Mathematical Formulation</div>
+            <div class="code-box">
+              Score = 300 + 600 * (<br>
+              &nbsp;&nbsp;0.25 * Wage_Consistency +<br>
+              &nbsp;&nbsp;0.25 * Work_Continuity +<br>
+              &nbsp;&nbsp;0.20 * Employer_Endorsement +<br>
+              &nbsp;&nbsp;0.15 * Digital_Trail_Ratio +<br>
+              &nbsp;&nbsp;0.15 * Evidence_Strength<br>
+              )
+            </div>
+            <ul class="card-list" style="margin-top: 12px;">
+              <li><strong>Wage Consistency:</strong> 1 - min(1.0, std_dev(wages) / mean(wages)).</li>
+              <li><strong>Work Continuity:</strong> min(1.0, verified_days_in_last_90 / 66).</li>
+              <li><strong>Income Projection:</strong> Kernel density estimate with 95% confidence interval.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-red"></div>
+            <div class="card-icon">🚨</div>
+            <div class="card-title">FraudDetector Statistical Anomaly Rules</div>
+            <ul class="card-list">
+              <li><strong>Wage Dispersion Outlier:</strong> Flags claims exceeding 2.5 standard deviations from regional trade average.</li>
+              <li><strong>Duplicate Time Punch:</strong> Detects overlapping working hours claimed across multiple contractors on the same day.</li>
+              <li><strong>Ghost Contractor Pattern:</strong> Flags contractor phone numbers that endorse 100+ workers with zero verified tax IDs.</li>
+              <li><strong>Geographic Velocity Anomaly:</strong> Flags entries logged hundreds of kilometers apart within impossible time intervals.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 11: Production Deployment on Vercel -->
+      <section class="slide" data-index="11">
+        <span class="slide-tag">DevOps & Cloud</span>
+        <h2 class="slide-title">Production Infrastructure on Vercel Edge</h2>
+        <p class="slide-subtitle">Optimized build pipeline delivering sub-second load times and bank-grade security headers.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📦</div>
+            <div class="card-title">Vite Bundling & Rolldown</div>
+            <p class="card-desc">Client bundle minified and code-split for lightning-fast edge delivery.</p>
+            <ul class="card-list">
+              <li>Production bundle built in 407ms</li>
+              <li>Zero-runtime Tailwind CSS v4 (108KB)</li>
+              <li>Tree-shaking eliminates unused library code</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">⚙️</div>
+            <div class="card-title">vercel.json Configuration</div>
+            <p class="card-desc">Custom rewrite and security header policies protecting user data.</p>
+            <ul class="card-list">
+              <li>SPA Rewrite: <code>/(.*) → /index.html</code></li>
+              <li><code>X-Content-Type-Options: nosniff</code></li>
+              <li><code>X-Frame-Options: DENY</code> (clickjacking guard)</li>
+              <li><code>X-XSS-Protection: 1; mode=block</code></li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🌐</div>
+            <div class="card-title">Global Edge Domains</div>
+            <p class="card-desc">Active live production aliases with automated SSL certificates.</p>
+            <ul class="card-list">
+              <li><code>frontend-eureka-b5b5.vercel.app</code></li>
+              <li><code>frontend-nine-alpha-59.vercel.app</code></li>
+              <li>SSO protection disabled for public access</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 12: Future Engineering Roadmap -->
+      <section class="slide" data-index="12">
+        <span class="slide-tag">Future Roadmap</span>
+        <h2 class="slide-title">Next Engineering Phase: Sovereign Digital Rails</h2>
+        <p class="slide-subtitle">Scaling from institutional platform to national sovereign digital public infrastructure (DPI).</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">⛓️</div>
+            <div class="card-title">Decentralized Consortium</div>
+            <p class="card-desc">Federate Merkle roots across State Labor Boards and public sector banks.</p>
+            <ul class="card-list">
+              <li>Anchor daily Merkle roots to public L1/L2 (Polygon/Ethereum)</li>
+              <li>Zero-knowledge SNARK proofs for private verification</li>
+              <li>Decentralized identity (DID) standard compliance</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📶</div>
+            <div class="card-title">Offline-First PWA & USSD</div>
+            <p class="card-desc">Enabling continuous logging even in remote construction sites with zero connectivity.</p>
+            <ul class="card-list">
+              <li>IndexedDB local ledger synchronization</li>
+              <li>Feature phone USSD (*99#) & SMS wage logging</li>
+              <li>Peer-to-peer Bluetooth mesh syncing with contractor</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🇮🇳</div>
+            <div class="card-title">India Stack Integration</div>
+            <p class="card-desc">Plugging natively into national digital governance rails.</p>
+            <ul class="card-list">
+              <li>Aadhaar e-KYC & DigiLocker credential issuance</li>
+              <li>Sahamati Account Aggregator (AA) framework</li>
+              <li>OCEN protocol adapter for 1-click bank micro-loans</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer Navigation -->
+  <footer class="presentation-footer">
+    <div class="keyboard-tips">
+      <span>Use <span class="kbd">←</span> <span class="kbd">→</span> or <span class="kbd">Space</span> to navigate</span>
+      <span>Press <span class="kbd">F</span> for Fullscreen</span>
+      <span>Press <span class="kbd">Home</span> / <span class="kbd">End</span></span>
+    </div>
+    <div class="nav-controls">
+      <button class="nav-btn" onclick="prevSlide()" title="Previous Slide">←</button>
+      <button class="nav-btn" onclick="nextSlide()" title="Next Slide">→</button>
+    </div>
+  </footer>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const progressBar = document.getElementById('progressBar');
+    const slideCounter = document.getElementById('slideCounter');
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+
+    function updateSlide(idx) {
+      if (idx < 0) idx = 0;
+      if (idx >= totalSlides) idx = totalSlides - 1;
+      currentSlide = idx;
+
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === currentSlide);
+      });
+
+      const pct = ((currentSlide + 1) / totalSlides) * 100;
+      progressBar.style.width = `${pct}%`;
+      slideCounter.textContent = `SLIDE ${String(currentSlide + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) updateSlide(currentSlide + 1);
+    }
+    function prevSlide() {
+      if (currentSlide > 0) updateSlide(currentSlide - 1);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        updateSlide(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        updateSlide(totalSlides - 1);
+      } else if (e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        toggleFullScreen();
+      }
+    });
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    // Touch swipe support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    document.addEventListener('touchend', e => {
+      const touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) nextSlide();
+      if (touchEndX - touchStartX > 50) prevSlide();
+    }, false);
+
+    // Initial update
+    updateSlide(0);
+  </script>
+</body>
+</html>

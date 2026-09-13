@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShramLedger - Platform & Product Walkthrough</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #040810;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.3);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.3);
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.3);
+      --red: #ef4444;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --dim: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Ambient dynamic glow orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      transition: all 1.2s ease;
+    }
+    .orb-1 { width: 500px; height: 500px; background: rgba(245, 158, 11, 0.12); top: -100px; right: -100px; }
+    .orb-2 { width: 450px; height: 450px; background: rgba(16, 185, 129, 0.10); bottom: -100px; left: -100px; }
+    .orb-3 { width: 350px; height: 350px; background: rgba(6, 182, 212, 0.08); top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+    /* Top Progress Bar */
+    .progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      z-index: 100;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--amber), var(--cyan), var(--emerald));
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 12px var(--amber-glow);
+    }
+
+    /* Header Nav */
+    .presentation-header {
+      position: relative;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 36px;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(4, 8, 16, 0.6);
+      backdrop-filter: blur(16px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--amber), #ea580c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 16px var(--amber-glow);
+    }
+    .brand-text h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .brand-text span {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .slide-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--amber), #ea580c);
+      color: #000;
+      border: none;
+      box-shadow: 0 0 14px var(--amber-glow);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 20px var(--amber-glow);
+      transform: translateY(-1px);
+    }
+
+    /* Slide Deck Stage */
+    .deck-stage {
+      flex: 1;
+      position: relative;
+      z-index: 10;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 36px;
+    }
+    .slide-container {
+      width: 100%;
+      max-width: 1280px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Slide Item */
+    .slide {
+      display: none;
+      opacity: 0;
+      transform: scale(0.96) translateY(16px);
+      transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+      width: 100%;
+    }
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      animation: slideIn 0.5s forwards ease-out;
+    }
+
+    @keyframes slideIn {
+      0% { opacity: 0; transform: scale(0.97) translateY(12px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Slide Typography */
+    .slide-tag {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--amber);
+      margin-bottom: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .slide-tag::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 8px var(--amber);
+    }
+    .slide-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff 40%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .slide-subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 860px;
+      margin-bottom: 28px;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      gap: 20px;
+      width: 100%;
+    }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+    .card-accent-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .accent-amber { background: linear-gradient(90deg, var(--amber), transparent); }
+    .accent-emerald { background: linear-gradient(90deg, var(--emerald), transparent); }
+    .accent-cyan { background: linear-gradient(90deg, var(--cyan), transparent); }
+    .accent-purple { background: linear-gradient(90deg, #a855f7, transparent); }
+    .accent-red { background: linear-gradient(90deg, var(--red), transparent); }
+
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+      display: inline-block;
+    }
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .card-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .card-list li {
+      font-size: 12px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.45;
+    }
+    .card-list li::before {
+      content: '✓';
+      color: var(--emerald);
+      font-weight: bold;
+      font-size: 11px;
+      margin-top: 1px;
+    }
+
+    /* Live Mini Simulators & Interactive Elements */
+    .metric-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--amber);
+    }
+    .hash-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 6px 10px;
+      border-radius: 8px;
+      color: var(--cyan);
+      word-break: break-all;
+      margin-top: 10px;
+    }
+
+    /* Footer Controls */
+    .presentation-footer {
+      position: relative;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 36px;
+      border-top: 1px solid var(--card-border);
+      background: rgba(4, 8, 16, 0.6);
+      backdrop-filter: blur(16px);
+    }
+    .keyboard-tips {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 11px;
+      color: var(--dim);
+    }
+    .kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: scale(1.05);
+    }
+    .nav-btn:active { transform: scale(0.95); }
+
+    /* Animated pulse dot */
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 10px var(--emerald);
+      animation: pulse 1.6s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient background glow orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Top Progress Bar -->
+  <div class="progress-track">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="presentation-header">
+    <a href="index.html" class="brand">
+      <div class="brand-logo">🛡️</div>
+      <div class="brand-text">
+        <h2>ShramLedger (श्रमLedger)</h2>
+        <span>Platform & Feature Presentation</span>
+      </div>
+    </a>
+    <div class="slide-badge">
+      <span class="pulse-dot"></span>
+      <span id="slideCounter">SLIDE 01 / 12</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-action" onclick="toggleFullScreen()">⛶ Fullscreen [F]</button>
+      <a href="ShramLedger_Platform_Walkthrough.pptx" download class="btn-action btn-primary">⬇ Download .PPTX</a>
+    </div>
+  </header>
+
+  <!-- Main Slide Deck Stage -->
+  <main class="deck-stage">
+    <div class="slide-container">
+
+      <!-- SLIDE 1: Title Slide -->
+      <section class="slide active" data-index="1">
+        <span class="slide-tag">Institutional Product Walkthrough</span>
+        <h1 class="slide-title" style="font-size: 52px; line-height: 1.1; margin-bottom: 14px;">
+          ShramLedger (श्रमLedger)
+        </h1>
+        <p class="slide-subtitle" style="font-size: 20px; max-width: 900px; margin-bottom: 36px; color: #cbd5e1;">
+          Tamper-Evident Employment & Income Verification Platform for Bharat's 450M Informal Workers.
+          Transforming informal cash work into bank-grade digital financial credentials.
+        </p>
+        <div class="cards-grid grid-4">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">🎙️</div>
+            <div class="card-title">Multimodal Ingestion</div>
+            <p class="card-desc">Zero-literacy Indic voice logging and OCR wage chit parsing in native dialects.</p>
+            <span class="metric-badge">Hindi • Hinglish • Bengali</span>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🔗</div>
+            <div class="card-title">SHA-256 Merkle Ledger</div>
+            <p class="card-desc">Every micro-attestation anchored into an immutable, tamper-evident Merkle DAG.</p>
+            <span class="metric-badge" style="color: var(--emerald); border-color: var(--emerald-glow);">O(log N) Proof of Inclusion</span>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📊</div>
+            <div class="card-title">ShramScore™ Scoring</div>
+            <p class="card-desc">Proprietary 300–900 informal credit gauge replacing non-existent CIBIL scores.</p>
+            <span class="metric-badge" style="color: var(--cyan); border-color: var(--cyan-glow);">Bank Underwriting Grade</span>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-purple"></div>
+            <div class="card-icon">🏛️</div>
+            <div class="card-title">DPDP Act 2023 Ready</div>
+            <p class="card-desc">Time-to-live purpose binding, Aadhaar/UAN masking, and 1-click consent revocation.</p>
+            <span class="metric-badge" style="color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">100% Worker Owned</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: The 450M Worker Crisis -->
+      <section class="slide" data-index="2">
+        <span class="slide-tag">The Market Challenge</span>
+        <h2 class="slide-title">The 450 Million Gap in Bharat's Informal Economy</h2>
+        <p class="slide-subtitle">92% of India's labor force works outside the formal payroll system with zero verifiable documentation.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-red"></div>
+            <div class="card-icon">💸</div>
+            <div class="card-title">Cash-in-Hand Invisible</div>
+            <p class="card-desc">Wages paid in daily physical cash or uncatalogued UPI transfers leave zero digital footprint.</p>
+            <ul class="card-list">
+              <li>No salary slips or appointment letters</li>
+              <li>Instantly rejected for prime bank loans & credit cards</li>
+              <li>Invisible to institutional NBFC credit models</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">⚠️</div>
+            <div class="card-title">Predatory Moneylenders</div>
+            <p class="card-desc">Emergency liquidity needs push migrant families into local informal moneylenders.</p>
+            <ul class="card-list">
+              <li>Exorbitant 36% to 60% APR compound interest rates</li>
+              <li>Generational debt traps triggered by monsoon illness</li>
+              <li>Banks unable to lend despite huge Priority Sector Lending targets</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📜</div>
+            <div class="card-title">Welfare Cess Leakage</div>
+            <p class="card-desc">Billions in Building & Other Construction Worker (BOCW) welfare funds sit unallocated.</p>
+            <ul class="card-list">
+              <li>Workers cannot prove 90-day continuous site requirement</li>
+              <li>Fake contractor claims cause massive fraudulent drain</li>
+              <li>Genuine construction laborers miss out on safety nets</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: 4 Core Pillars -->
+      <section class="slide" data-index="3">
+        <span class="slide-tag">Platform Architecture</span>
+        <h2 class="slide-title">The 4 Pillars of ShramLedger's Trust Engine</h2>
+        <p class="slide-subtitle">A holistic bridge between informal field realities and formal financial institutions.</p>
+        <div class="cards-grid grid-4">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">🎤</div>
+            <div class="card-title">1. Multimodal Capture</div>
+            <p class="card-desc">Speak naturally in voice or snap a photo of a site chit. Zero paperwork friction.</p>
+            <ul class="card-list">
+              <li>Indic Speech NLP recognition</li>
+              <li>Contrast-normalized OCR</li>
+              <li>Statutory wage floor guard</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🛡️</div>
+            <div class="card-title">2. Cryptographic Proof</div>
+            <p class="card-desc">SHA-256 Merkle tree anchors every entry. Tampering is mathematically impossible.</p>
+            <ul class="card-list">
+              <li>Deterministic leaf hashing</li>
+              <li>Audit path co-hash verification</li>
+              <li>Live tamper-simulation sandbox</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📈</div>
+            <div class="card-title">3. ShramScore Engine</div>
+            <p class="card-desc">Translates daily consistency, digital trail, and endorsements into an alternative score.</p>
+            <ul class="card-list">
+              <li>300 to 900 credit scale</li>
+              <li>Income projection curves</li>
+              <li>Prime informal classification</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-purple"></div>
+            <div class="card-icon">🔐</div>
+            <div class="card-title">4. DPDP & Portals</div>
+            <p class="card-desc">Tailored consoles for Contractors, Lenders, Welfare Boards, and Verifiers.</p>
+            <ul class="card-list">
+              <li>1-click consent revocation</li>
+              <li>B2B underwriting REST APIs</li>
+              <li>Dynamic QR code credentials</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: Multimodal Ingestion Engine -->
+      <section class="slide" data-index="4">
+        <span class="slide-tag">Feature Deep-Dive</span>
+        <h2 class="slide-title">Multimodal Ingestion: Inclusive by Design</h2>
+        <p class="slide-subtitle">Built from the ground up for low-literacy workers who cannot fill complex online forms.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">🎙️</div>
+            <div class="card-title">Indic Voice Logger</div>
+            <p class="card-desc">Worker speaks in native dialect: <em>"आज 8 घंटे काम किया, 850 रुपए मिले"</em>.</p>
+            <ul class="card-list">
+              <li>Audio waveform capture via Web Speech API</li>
+              <li>Phonetic matching for regional speech patterns</li>
+              <li>Auto-populates date, wage, trade, and contractor</li>
+            </ul>
+            <div class="hash-badge">Transcription: ₹850 / 8h / Mason / Conf: 96%</div>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📷</div>
+            <div class="card-title">Document & OCR Scanner</div>
+            <p class="card-desc">Upload or photograph daily site chits, contractor slips, or job cards.</p>
+            <ul class="card-list">
+              <li>Canvas contrast normalization & noise reduction</li>
+              <li>Tesseract OCR parsing with regular expression fallbacks</li>
+              <li>Validates UPI transaction screenshots & UTRs</li>
+            </ul>
+            <div class="hash-badge">Status: OCR Parsed (Gold Band Evidence)</div>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">⚖️</div>
+            <div class="card-title">Statutory Wage Validator</div>
+            <p class="card-desc">Protects laborers against wage exploitation by cross-checking statutory wage floors.</p>
+            <ul class="card-list">
+              <li>Central & State BOCW minimum wage benchmarks</li>
+              <li>Skill tiers: Highly Skilled, Skilled, Semi-Skilled</li>
+              <li>Flags underpayment violations in real-time</li>
+            </ul>
+            <div class="hash-badge">Benchmarked: Delhi NCR Mason (₹850 ≥ ₹750)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: Cryptographic Merkle DAG -->
+      <section class="slide" data-index="5">
+        <span class="slide-tag">Cryptographic Integrity</span>
+        <h2 class="slide-title">SHA-256 Merkle DAG: Mathematical Trust</h2>
+        <p class="slide-subtitle">Eliminating fake certificates and backdated wage tampering through cryptographic certainty.</p>
+        <div class="cards-grid grid-2">
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🌳</div>
+            <div class="card-title">Merkle Tree Architecture</div>
+            <p class="card-desc">Individual daily work entries form cryptographic leaves. Leaves are paired and hashed recursively into an immutable Merkle Root.</p>
+            <ul class="card-list">
+              <li>Canonical JSON deterministic hashing prevents formatting anomalies</li>
+              <li>O(log N) verification: Lenders verify any single day without loading entire history</li>
+              <li>Zero reliance on third-party verification intermediaries</li>
+            </ul>
+            <div class="hash-badge">Root: 9e8a7b6c5d4e3f2a109876543210fedcba9876543210abcdef0123456789abcd</div>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-red"></div>
+            <div class="card-icon">⚡</div>
+            <div class="card-title">Interactive Tamper Simulation Sandbox</div>
+            <p class="card-desc">Demonstrated live in the website's Merkle DAG Visualizer. Change even a single number, and the entire cryptographic chain breaks.</p>
+            <ul class="card-list">
+              <li>Simulate altering ₹850 to ₹1,850 on an old entry</li>
+              <li>Immediate leaf rehash cascades upwards into root mismatch</li>
+              <li>System flags: <strong>TAMPER_DETECTED: Cryptographic Hash Mismatch</strong></li>
+            </ul>
+            <div class="hash-badge" style="color: var(--red); border-color: rgba(239, 68, 68, 0.3);">Expected: ...9abcd ≠ Recalculated: ...1234f</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: DPDP Act 2023 Compliance -->
+      <section class="slide" data-index="6">
+        <span class="slide-tag">Data Governance</span>
+        <h2 class="slide-title">DPDP Act 2023: Worker-First Consent Engine</h2>
+        <p class="slide-subtitle">Strict alignment with India's Digital Personal Data Protection Act, keeping the worker in total control.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">📋</div>
+            <div class="card-title">Purpose-Bound Access</div>
+            <p class="card-desc">Lenders cannot access a worker's ledger without an explicit, time-bound consent grant.</p>
+            <ul class="card-list">
+              <li>Purposes: Loan Underwriting, Welfare Grant, Job Match</li>
+              <li>Worker selects exact data fields to share</li>
+              <li>Logged in immutable audit trail</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">⏳</div>
+            <div class="card-title">Time-To-Live (TTL) Expiration</div>
+            <p class="card-desc">Access tokens automatically expire after the designated underwriting window.</p>
+            <ul class="card-list">
+              <li>Default 7-day or 30-day evaluation window</li>
+              <li>Prevents perpetual background data harvesting</li>
+              <li>Stops unapproved data sharing across affiliates</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🚫</div>
+            <div class="card-title">1-Click Instant Revocation</div>
+            <p class="card-desc">Workers can revoke consent at any moment with a single tap in their dashboard.</p>
+            <ul class="card-list">
+              <li>Immediately invalidates NBFC API credentials</li>
+              <li>Aadhaar & UAN numbers masked by default (XXXX-XXXX-4829)</li>
+              <li>Full compliance with DPDP Right to Erasure</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: ShramScore Credit Engine -->
+      <section class="slide" data-index="7">
+        <span class="slide-tag">Underwriting Intelligence</span>
+        <h2 class="slide-title">ShramScore™: Multi-Factor Informal Credit</h2>
+        <p class="slide-subtitle">A sophisticated alternative underwriting model turning informal work history into loan approvals.</p>
+        <div class="cards-grid grid-2">
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">🎯</div>
+            <div class="card-title">5 Core Algorithmic Parameters</div>
+            <ul class="card-list">
+              <li><strong>Wage Consistency (25%):</strong> Standard deviation of weekly income over 90 days.</li>
+              <li><strong>Work Continuity (25%):</strong> Ratio of active working days (benchmark: 22+ days/mo).</li>
+              <li><strong>Employer Endorsement (20%):</strong> Ratio of entries verified by contractors via OTP.</li>
+              <li><strong>Digital Trail Ratio (15%):</strong> Proportion of payments received via bank/UPI.</li>
+              <li><strong>Evidence Strength (15%):</strong> Platinum (cryptographic), Gold, Silver, Bronze.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">💳</div>
+            <div class="card-title">Real Worker Underwriting Profile</div>
+            <p class="card-desc">Case study: <strong>Ramesh Kumar</strong> (Mason, Delhi NCR)</p>
+            <ul class="card-list">
+              <li><strong>Composite Score:</strong> 785 / 900 (Tier-1 Prime Informal)</li>
+              <li><strong>Projected Monthly Income:</strong> ₹24,200 (95% CI: ₹22.5k - ₹25.8k)</li>
+              <li><strong>Recommended Credit Limit:</strong> ₹50,000 credit line</li>
+              <li><strong>Pricing Advantage:</strong> 150 bps interest rate discount</li>
+            </ul>
+            <div class="hash-badge">Status: Approved by HDFC Rural Micro-Finance Policy</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: Work Passport & Certificate -->
+      <section class="slide" data-index="8">
+        <span class="slide-tag">Worker Credentials</span>
+        <h2 class="slide-title">Digital Work Passport & Income Certificate</h2>
+        <p class="slide-subtitle">A verifiable credential empowering workers to prove their trade skills and financial worth anywhere.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">🪪</div>
+            <div class="card-title">Digital Work Passport</div>
+            <p class="card-desc">Consolidated historical timeline of all sites, projects, and contractor endorsements.</p>
+            <ul class="card-list">
+              <li>Portable across states & contractors</li>
+              <li>Badges for verified skill certifications</li>
+              <li>Cumulative days worked & total wages logged</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">📱</div>
+            <div class="card-title">Dynamic QR Verification</div>
+            <p class="card-desc">Embedded QR code linking directly to the live verification node.</p>
+            <ul class="card-list">
+              <li>Scan with any standard smartphone camera</li>
+              <li>Displays cryptographic Merkle root hash</li>
+              <li>Validates authenticity in under 2 seconds</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📄</div>
+            <div class="card-title">PDF & WhatsApp Sharing</div>
+            <p class="card-desc">Instant official PDF download styled for bank branch and visa compliance.</p>
+            <ul class="card-list">
+              <li>1-click export via jsPDF & HTML2Canvas</li>
+              <li>Direct WhatsApp sharing to contractors</li>
+              <li>Multilingual in 5 Indian languages</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: Employer & Contractor Portal -->
+      <section class="slide" data-index="9">
+        <span class="slide-tag">B2B Institutional Console</span>
+        <h2 class="slide-title">Employer Portal: Muster Rolls & Automated Payouts</h2>
+        <p class="slide-subtitle">Streamlining workforce compliance, contractor approvals, and direct wage disbursements.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">✍️</div>
+            <div class="card-title">One-Touch Endorsement</div>
+            <p class="card-desc">Contractors receive instant notification when a crew member logs a wage slip.</p>
+            <ul class="card-list">
+              <li>Verify attendance and wage via phone OTP</li>
+              <li>Creates legally sound proof of employment</li>
+              <li>Eliminates labor dispute liabilities</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📑</div>
+            <div class="card-title">Bulk Muster Roll Upload</div>
+            <p class="card-desc">Ingest CSV muster rolls containing hundreds of workers in a single operation.</p>
+            <ul class="card-list">
+              <li>Auto-parses worker UAN, trade, hours & wage</li>
+              <li>Generates batch Merkle roots in seconds</li>
+              <li>Replaces manual paper site registers</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🏦</div>
+            <div class="card-title">Direct Payout Batches</div>
+            <p class="card-desc">Execute bulk bank and UPI wage transfers directly to workers' verified accounts.</p>
+            <ul class="card-list">
+              <li>Escrow hold integration with partner banks</li>
+              <li>Immutable UTR tracking on the ledger</li>
+              <li>Cuts middleman cash theft and kickbacks</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: Lender Underwriting Portal -->
+      <section class="slide" data-index="10">
+        <span class="slide-tag">B2B Institutional Console</span>
+        <h2 class="slide-title">Lender Portal: Real-Time Underwriting & APIs</h2>
+        <p class="slide-subtitle">Unlocking 450M unbanked workers as a high-margin, low-default micro-lending asset class.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">📉</div>
+            <div class="card-title">Income Stability Curves</div>
+            <p class="card-desc">Visualizes historical earnings velocity and seasonal volatility trends.</p>
+            <ul class="card-list">
+              <li>Identifies monsoon and migration downturns</li>
+              <li>Calculates reliable Debt Service Ratio (DSR)</li>
+              <li>Enables customized flexible repayment schedules</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">⚙️</div>
+            <div class="card-title">Automated Policy Rules</div>
+            <p class="card-desc">Define institutional underwriting rules and execute instant evaluations.</p>
+            <ul class="card-list">
+              <li>Rule: Min ShramScore > 700 & Endorsements > 80%</li>
+              <li>Instant conditional approval recommendations</li>
+              <li>Dynamic risk-adjusted interest rate pricing</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🔑</div>
+            <div class="card-title">REST API & Key Manager</div>
+            <p class="card-desc">Production and sandbox API key provisioning with 600 RPM rate limits.</p>
+            <ul class="card-list">
+              <li>cURL and JSON code snippets for easy integration</li>
+              <li>Webhooks on verified wage milestones</li>
+              <li>Zero personal data leakage beyond consent scope</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 11: NGO & State Welfare Portal -->
+      <section class="slide" data-index="11">
+        <span class="slide-tag">GovTech & Social Impact</span>
+        <h2 class="slide-title">BOCW & NGO Portal: Last-Mile Welfare Delivery</h2>
+        <p class="slide-subtitle">Ensuring state social security funds and welfare cess reach genuine informal workers.</p>
+        <div class="cards-grid grid-3">
+          <div class="card">
+            <div class="card-accent-bar accent-emerald"></div>
+            <div class="card-icon">🏛️</div>
+            <div class="card-title">BOCW 90-Day Verification</div>
+            <p class="card-desc">The BOCW Act requires 90 days continuous construction work to unlock state welfare.</p>
+            <ul class="card-list">
+              <li>Instant mathematical proof of 90 days on-site</li>
+              <li>Unlocks ₹5k tool subsidy & ₹51k marriage grant</li>
+              <li>Eliminates ghost worker roll fraud</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-amber"></div>
+            <div class="card-icon">🤝</div>
+            <div class="card-title">Automated Scheme Matching</div>
+            <p class="card-desc">Auto-evaluates worker demographics to recommend central and state schemes.</p>
+            <ul class="card-list">
+              <li>PM Shram Yogi Maan-dhan (PM-SYM ₹3k pension)</li>
+              <li>PM Suraksha Bima Yojana (PMSBY ₹2 lakh cover)</li>
+              <li>PM-SVANidhi collateral-free street vendor loans</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">🗺️</div>
+            <div class="card-title">Macro Labor Analytics</div>
+            <p class="card-desc">Aggregated anonymized dashboards for labor welfare commissioners.</p>
+            <ul class="card-list">
+              <li>Geographic wage dispersion across NCR, Mumbai, etc.</li>
+              <li>Gender wage disparity tracking across trades</li>
+              <li>BOCW cess compliance monitor for major EPCs</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 12: Admin Fraud Radar & Public Verifier -->
+      <section class="slide" data-index="12">
+        <span class="slide-tag">Governance & Integrity</span>
+        <h2 class="slide-title">Admin Fraud Radar & Universal Public Verifier</h2>
+        <p class="slide-subtitle">Round-the-clock cryptographic integrity, anomaly radar, and zero-knowledge verification.</p>
+        <div class="cards-grid grid-2">
+          <div class="card">
+            <div class="card-accent-bar accent-red"></div>
+            <div class="card-icon">🚨</div>
+            <div class="card-title">Admin Fraud & Anomaly Radar</div>
+            <p class="card-desc">Continuous statistical background monitoring detecting suspicious patterns.</p>
+            <ul class="card-list">
+              <li><strong>Wage Outliers:</strong> Flags daily wages exceeding regional P95 thresholds (e.g. ₹1,800 mason claim).</li>
+              <li><strong>Duplicate Time Punches:</strong> Catches overlapping hours logged with multiple contractors.</li>
+              <li><strong>Geographic Velocity:</strong> Detects impossible physical distance jumps between site logs.</li>
+              <li><strong>Consensus Audit Logs:</strong> Immutable administrative record of dispute resolutions.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-accent-bar accent-cyan"></div>
+            <div class="card-icon">🔍</div>
+            <div class="card-title">Universal Public Verifier</div>
+            <p class="card-desc">Public zero-knowledge terminal accessible by any employer, landlord, or bank officer.</p>
+            <ul class="card-list">
+              <li>Input any Certificate ID (e.g. <code>CERT-SL-2026-RAMESH-8921</code>) or scan QR.</li>
+              <li>Displays live validity, issuing authority, and cryptographic Merkle root hash.</li>
+              <li>Verifies proof without exposing raw phone numbers or private work history.</li>
+              <li>Universally accessible 24/7 on Vercel edge infrastructure.</li>
+            </ul>
+            <div class="hash-badge" style="color: var(--emerald); border-color: var(--emerald-glow);">Verified: ShramLedger Autonomous Proof Node #1</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer Navigation -->
+  <footer class="presentation-footer">
+    <div class="keyboard-tips">
+      <span>Use <span class="kbd">←</span> <span class="kbd">→</span> or <span class="kbd">Space</span> to navigate</span>
+      <span>Press <span class="kbd">F</span> for Fullscreen</span>
+      <span>Press <span class="kbd">Home</span> / <span class="kbd">End</span></span>
+    </div>
+    <div class="nav-controls">
+      <button class="nav-btn" onclick="prevSlide()" title="Previous Slide">←</button>
+      <button class="nav-btn" onclick="nextSlide()" title="Next Slide">→</button>
+    </div>
+  </footer>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const progressBar = document.getElementById('progressBar');
+    const slideCounter = document.getElementById('slideCounter');
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+
+    function updateSlide(idx) {
+      if (idx < 0) idx = 0;
+      if (idx >= totalSlides) idx = totalSlides - 1;
+      currentSlide = idx;
+
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === currentSlide);
+      });
+
+      const pct = ((currentSlide + 1) / totalSlides) * 100;
+      progressBar.style.width = `${pct}%`;
+      slideCounter.textContent = `SLIDE ${String(currentSlide + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) updateSlide(currentSlide + 1);
+    }
+    function prevSlide() {
+      if (currentSlide > 0) updateSlide(currentSlide - 1);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        updateSlide(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        updateSlide(totalSlides - 1);
+      } else if (e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        toggleFullScreen();
+      }
+    });
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    // Touch swipe support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    document.addEventListener('touchend', e => {
+      const touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) nextSlide();
+      if (touchEndX - touchStartX > 50) prevSlide();
+    }, false);
+
+    // Initial update
+    updateSlide(0);
+  </script>
+</body>
+</html>

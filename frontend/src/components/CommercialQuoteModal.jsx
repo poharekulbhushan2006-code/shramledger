@@ -321,7 +321,7 @@ export default function CommercialQuoteModal({ isOpen, onClose, initialTier = 'c
                 Included Enterprise Modules:
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300">
-                {quoteData.features_included.map((feat, i) => (
+                {(quoteData.features_included || []).map((feat, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                     <span>{feat}</span>
