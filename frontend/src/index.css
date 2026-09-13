@@ -1,45 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap');
 @import "tailwindcss";
 
 /* ===================================
-   INDIAN GOVERNMENT DESIGN SYSTEM
-   Palette: Navy Blue + Saffron + White
-   Reference: NIC / MeitY / India.gov.in
+   SHRAMLEDGER — FOREST GREEN + GOLD
+   Premium Indian Government Theme
+   Inspired by India.gov.in & NIC 2024
    =================================== */
 
 :root {
-  /* Primary Government Navy Blue */
-  --gov-navy:       #003087;
-  --gov-navy-dark:  #001f5e;
-  --gov-navy-mid:   #004ba8;
-  --gov-navy-light: #e8eef8;
-  --gov-navy-pale:  #f0f4fb;
+  /* ── Primary: Deep Forest Green ── */
+  --gov-primary:       #1B4332;   /* Deep forest green */
+  --gov-primary-dark:  #0D2B20;   /* Darker shade for hover */
+  --gov-primary-mid:   #2D6A4F;   /* Mid green for gradients */
+  --gov-primary-light: #74C69D;   /* Light emerald accent */
+  --gov-primary-pale:  #EAF5EE;   /* Very light green tint */
+  --gov-primary-bg:    #F0F7F2;   /* Light green page tint */
 
-  /* Saffron / Orange (Indian Tricolor) */
-  --gov-saffron:    #FF6B00;
-  --gov-saffron-dk: #d45800;
-  --gov-saffron-lt: #fff4ec;
+  /* ── Accent: Rich Gold / Amber ── */
+  --gov-gold:          #F4A900;   /* Primary gold */
+  --gov-gold-dark:     #C8860A;   /* Dark gold for hover */
+  --gov-gold-light:    #FFF3CD;   /* Light gold bg */
+  --gov-gold-pale:     #FFFBF0;   /* Pale gold tint */
 
-  /* India Green (Tricolor third stripe) */
-  --gov-green:      #138808;
-  --gov-green-light:#e8f5e6;
+  /* ── Saffron (Tricolor) ── */
+  --gov-saffron:       #FF6B00;
+  --gov-green:         #138808;
 
-  /* Neutral / UI */
-  --gov-white:      #ffffff;
-  --gov-bg:         #f5f7fa;
-  --gov-bg-alt:     #eef1f6;
-  --gov-border:     #d0d9e8;
-  --gov-border-dk:  #a8b8d0;
-  --gov-text:       #1a2642;
-  --gov-text-mid:   #3d5280;
-  --gov-text-light: #6b7c9e;
-  --gov-text-muted: #9aaac0;
+  /* ── Neutral / UI ── */
+  --gov-white:         #FFFFFF;
+  --gov-bg:            #F8FAF9;   /* Warm off-white with green tint */
+  --gov-bg-alt:        #EEF5F1;
+  --gov-border:        #C8DDD2;
+  --gov-border-dk:     #94B8A4;
+  --gov-text:          #1A2E25;   /* Very dark green-black */
+  --gov-text-mid:      #2D5140;   /* Mid green text */
+  --gov-text-light:    #5C7A6A;   /* Muted green-gray */
+  --gov-text-muted:    #8FA89B;
 
-  /* Status */
-  --gov-success:    #138808;
-  --gov-warning:    #e6a800;
-  --gov-danger:     #c0392b;
-  --gov-info:       #0066cc;
+  /* ── Status Colors ── */
+  --gov-success:       #1B7A3E;
+  --gov-warning:       #D4880A;
+  --gov-danger:        #B91C1C;
+  --gov-info:          #1D4ED8;
 }
 
 @layer base {
@@ -65,8 +67,8 @@
   }
 
   h1, h2, h3, h4, h5 {
-    font-family: 'Noto Sans', 'Noto Sans Devanagari', sans-serif;
-    color: var(--gov-navy);
+    font-family: 'Playfair Display', 'Noto Sans', 'Noto Sans Devanagari', serif;
+    color: var(--gov-primary);
     font-weight: 700;
     line-height: 1.3;
   }
@@ -78,22 +80,23 @@
    =================================== */
 
 .gov-top-stripe {
-  height: 6px;
+  height: 5px;
   background: linear-gradient(
     to right,
-    var(--gov-saffron) 33.3%,
-    var(--gov-white)   33.3% 66.6%,
-    var(--gov-green)   66.6%
+    var(--gov-saffron)   0%   33%,
+    var(--gov-white)    33%   66%,
+    var(--gov-green)    66%  100%
   );
 }
 
 .gov-header-band {
-  background: var(--gov-navy);
+  background: var(--gov-primary-dark);
   color: #fff;
   font-size: 11px;
   padding: 4px 16px;
   letter-spacing: 0.04em;
   font-weight: 500;
+  border-bottom: 2px solid var(--gov-gold);
 }
 
 /* ===================================
@@ -104,16 +107,16 @@
 .glass {
   background: var(--gov-white);
   border: 1px solid var(--gov-border);
-  box-shadow: 0 1px 4px rgba(0, 48, 135, 0.08);
+  box-shadow: 0 1px 4px rgba(27, 67, 50, 0.08);
 }
 
 .glass-light {
-  background: var(--gov-navy-pale);
+  background: var(--gov-primary-pale);
   border: 1px solid var(--gov-border);
 }
 
 .glass-dark {
-  background: var(--gov-navy);
+  background: var(--gov-primary);
   border: 1px solid rgba(255,255,255,0.12);
   color: #fff;
 }
@@ -121,7 +124,7 @@
 .glass-card {
   background: var(--gov-white);
   border: 1px solid var(--gov-border);
-  box-shadow: 0 2px 8px rgba(0, 48, 135, 0.07);
+  box-shadow: 0 2px 8px rgba(27, 67, 50, 0.07);
   border-radius: 8px;
 }
 
@@ -133,8 +136,8 @@
 }
 
 .glass-input:focus {
-  border-color: var(--gov-navy-mid);
-  box-shadow: 0 0 0 3px rgba(0, 75, 168, 0.12);
+  border-color: var(--gov-primary-mid);
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.15);
   outline: none;
 }
 
@@ -145,19 +148,19 @@
 .gov-card {
   background: var(--gov-white);
   border: 1px solid var(--gov-border);
-  border-top: 3px solid var(--gov-navy);
+  border-top: 3px solid var(--gov-primary);
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 48, 135, 0.06);
+  box-shadow: 0 2px 6px rgba(27, 67, 50, 0.08);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .gov-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 48, 135, 0.12);
-  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(27, 67, 50, 0.14);
+  transform: translateY(-2px);
 }
 
 .gov-card-saffron {
-  border-top-color: var(--gov-saffron);
+  border-top-color: var(--gov-gold);
 }
 
 .gov-card-green {
@@ -167,15 +170,58 @@
 .premium-card {
   background: var(--gov-white);
   border: 1px solid var(--gov-border);
-  border-top: 3px solid var(--gov-navy);
+  border-top: 3px solid var(--gov-primary);
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 48, 135, 0.07);
+  box-shadow: 0 2px 8px rgba(27, 67, 50, 0.08);
   transition: all 0.2s ease;
 }
 
 .premium-card:hover {
-  box-shadow: 0 6px 20px rgba(0, 48, 135, 0.13);
+  box-shadow: 0 8px 24px rgba(27, 67, 50, 0.15);
   transform: translateY(-2px);
+}
+
+/* Light Theme Card Text Contrast Overrides */
+.glass-card, .gov-card, .premium-card {
+  color: var(--gov-text);
+}
+
+.glass-card h1, .glass-card h2, .glass-card h3, .glass-card h4,
+.gov-card h1, .gov-card h2, .gov-card h3, .gov-card h4,
+.premium-card h1, .premium-card h2, .premium-card h3, .premium-card h4 {
+  color: var(--gov-primary);
+}
+
+.glass-card .text-slate-100, .glass-card .text-slate-200,
+.gov-card .text-slate-100, .gov-card .text-slate-200,
+.premium-card .text-slate-100, .premium-card .text-slate-200 {
+  color: var(--gov-text) !important;
+}
+
+.glass-card .text-slate-300, .glass-card .text-slate-400,
+.gov-card .text-slate-300, .gov-card .text-slate-400,
+.premium-card .text-slate-300, .premium-card .text-slate-400 {
+  color: var(--gov-text-mid) !important;
+}
+
+.glass-card .text-slate-500, .glass-card .text-slate-600,
+.gov-card .text-slate-500, .gov-card .text-slate-600,
+.premium-card .text-slate-500, .premium-card .text-slate-600 {
+  color: var(--gov-text-light) !important;
+}
+
+.glass-card .bg-slate-950, .glass-card .bg-slate-900,
+.gov-card .bg-slate-950, .gov-card .bg-slate-900,
+.premium-card .bg-slate-950, .premium-card .bg-slate-900 {
+  background: var(--gov-bg-alt) !important;
+  color: var(--gov-text) !important;
+  border-color: var(--gov-border) !important;
+}
+
+.glass-card .border-slate-800, .glass-card .border-slate-700,
+.gov-card .border-slate-800, .gov-card .border-slate-700,
+.premium-card .border-slate-800, .premium-card .border-slate-700 {
+  border-color: var(--gov-border) !important;
 }
 
 /* ===================================
@@ -183,9 +229,9 @@
    =================================== */
 
 .navbar-premium {
-  background: var(--gov-navy) !important;
-  border-bottom: 3px solid var(--gov-saffron) !important;
-  box-shadow: 0 2px 12px rgba(0, 48, 135, 0.25) !important;
+  background: var(--gov-primary) !important;
+  border-bottom: 3px solid var(--gov-gold) !important;
+  box-shadow: 0 2px 12px rgba(27, 67, 50, 0.30) !important;
   backdrop-filter: none !important;
 }
 
@@ -194,22 +240,22 @@
    =================================== */
 
 .btn-primary {
-  background: var(--gov-navy);
+  background: var(--gov-primary);
   color: #fff;
   font-weight: 700;
-  border: 2px solid var(--gov-navy);
+  border: 2px solid var(--gov-primary);
   border-radius: 4px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 48, 135, 0.25);
+  box-shadow: 0 2px 8px rgba(27, 67, 50, 0.30);
   letter-spacing: 0.03em;
   text-transform: uppercase;
   font-size: 12px;
 }
 
 .btn-primary:hover {
-  background: var(--gov-navy-dark);
-  border-color: var(--gov-navy-dark);
-  box-shadow: 0 4px 12px rgba(0, 48, 135, 0.35);
+  background: var(--gov-primary-dark);
+  border-color: var(--gov-primary-dark);
+  box-shadow: 0 4px 14px rgba(27, 67, 50, 0.40);
   transform: translateY(-1px);
 }
 
@@ -219,8 +265,8 @@
 
 .btn-secondary {
   background: var(--gov-white);
-  color: var(--gov-navy);
-  border: 2px solid var(--gov-navy);
+  color: var(--gov-primary);
+  border: 2px solid var(--gov-primary);
   border-radius: 4px;
   font-weight: 600;
   transition: all 0.2s ease;
@@ -230,22 +276,25 @@
 }
 
 .btn-secondary:hover {
-  background: var(--gov-navy-light);
+  background: var(--gov-primary-pale);
   transform: translateY(-1px);
 }
 
 .btn-saffron {
-  background: var(--gov-saffron);
-  color: #fff;
-  font-weight: 700;
-  border: 2px solid var(--gov-saffron);
+  background: var(--gov-gold);
+  color: var(--gov-primary-dark);
+  font-weight: 800;
+  border: 2px solid var(--gov-gold);
   border-radius: 4px;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(244, 169, 0, 0.35);
 }
 
 .btn-saffron:hover {
-  background: var(--gov-saffron-dk);
-  border-color: var(--gov-saffron-dk);
+  background: var(--gov-gold-dark);
+  border-color: var(--gov-gold-dark);
+  box-shadow: 0 4px 14px rgba(244, 169, 0, 0.45);
+  transform: translateY(-1px);
 }
 
 /* ===================================
@@ -253,27 +302,27 @@
    =================================== */
 
 .glow-amber {
-  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.25), 0 4px 12px rgba(255, 107, 0, 0.15);
+  box-shadow: 0 0 0 2px rgba(244, 169, 0, 0.30), 0 4px 12px rgba(244, 169, 0, 0.18);
 }
 
 .glow-emerald {
-  box-shadow: 0 0 0 2px rgba(19, 136, 8, 0.25), 0 4px 12px rgba(19, 136, 8, 0.15);
+  box-shadow: 0 0 0 2px rgba(27, 67, 50, 0.30), 0 4px 12px rgba(27, 67, 50, 0.18);
 }
 
 .glow-cyan {
-  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.25), 0 4px 12px rgba(0, 102, 204, 0.15);
+  box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.30), 0 4px 12px rgba(45, 106, 79, 0.18);
 }
 
 .glow-orange {
-  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.25), 0 4px 12px rgba(255, 107, 0, 0.15);
+  box-shadow: 0 0 0 2px rgba(244, 169, 0, 0.30), 0 4px 12px rgba(244, 169, 0, 0.18);
 }
 
 .glow-indigo {
-  box-shadow: 0 0 0 2px rgba(0, 48, 135, 0.25), 0 4px 12px rgba(0, 48, 135, 0.15);
+  box-shadow: 0 0 0 2px rgba(27, 67, 50, 0.30), 0 4px 12px rgba(27, 67, 50, 0.18);
 }
 
 .inner-glow-amber {
-  box-shadow: inset 0 0 0 1px rgba(255, 107, 0, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(244, 169, 0, 0.35);
 }
 
 /* ===================================
@@ -290,7 +339,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 2px;
-  background: linear-gradient(135deg, var(--gov-navy), var(--gov-saffron));
+  background: linear-gradient(135deg, var(--gov-primary), var(--gov-gold));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -311,12 +360,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gov-navy-mid);
+  background: var(--gov-primary-mid);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gov-navy);
+  background: var(--gov-primary);
 }
 
 /* ===================================
@@ -324,9 +373,9 @@
    =================================== */
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 48, 135, 0.4); }
-  60% { transform: scale(1.04); box-shadow: 0 0 0 14px rgba(0, 48, 135, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 48, 135, 0); }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(27, 67, 50, 0.5); }
+  60% { transform: scale(1.04); box-shadow: 0 0 0 14px rgba(27, 67, 50, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(27, 67, 50, 0); }
 }
 
 @keyframes float {
@@ -382,8 +431,8 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(0, 48, 135, 0.2); }
-  50% { box-shadow: 0 0 0 4px rgba(0, 48, 135, 0.4); }
+  0%, 100% { box-shadow: 0 0 0 2px rgba(27, 67, 50, 0.20); }
+  50% { box-shadow: 0 0 0 4px rgba(27, 67, 50, 0.40); }
 }
 
 @keyframes marquee {
@@ -396,7 +445,7 @@
 .animate-float-delayed { animation: float-delayed 6s ease-in-out infinite; }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(0, 48, 135, 0.05), transparent);
+  background: linear-gradient(90deg, transparent, rgba(27, 67, 50, 0.06), transparent);
   background-size: 200% 100%;
   animation: shimmer 2.5s infinite;
 }
@@ -414,20 +463,20 @@
 
 .bg-grid {
   background-image:
-    linear-gradient(rgba(0, 48, 135, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 48, 135, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(27, 67, 50, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 67, 50, 0.04) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
 .bg-dots {
-  background-image: radial-gradient(rgba(0, 48, 135, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(27, 67, 50, 0.07) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 .bg-circuit {
   background-image:
-    linear-gradient(rgba(0, 48, 135, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 48, 135, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(27, 67, 50, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 67, 50, 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
@@ -441,7 +490,7 @@
 
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 48, 135, 0.12);
+  box-shadow: 0 6px 20px rgba(27, 67, 50, 0.14);
 }
 
 /* ===================================
@@ -461,7 +510,7 @@
   height: 100%;
   border-radius: 3px;
   transition: width 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  background: linear-gradient(90deg, var(--gov-navy), var(--gov-navy-mid));
+  background: linear-gradient(90deg, var(--gov-primary), var(--gov-gold));
 }
 
 /* ===================================
@@ -469,7 +518,7 @@
    =================================== */
 
 .score-ring {
-  filter: drop-shadow(0 0 8px rgba(0, 48, 135, 0.3));
+  filter: drop-shadow(0 0 8px rgba(244, 169, 0, 0.40));
 }
 
 /* ===================================
@@ -479,11 +528,11 @@
 .text-shimmer {
   background: linear-gradient(
     90deg,
-    var(--gov-navy)     0%,
-    var(--gov-navy-mid) 30%,
-    var(--gov-saffron)  60%,
-    var(--gov-navy-mid) 80%,
-    var(--gov-navy)     100%
+    var(--gov-primary)      0%,
+    var(--gov-primary-mid)  30%,
+    var(--gov-gold)         60%,
+    var(--gov-primary-mid)  80%,
+    var(--gov-primary)     100%
   );
   background-size: 200% auto;
   background-clip: text;
@@ -505,16 +554,16 @@
 }
 
 .orb-amber {
-  background: radial-gradient(circle, rgba(255, 107, 0, 0.12), transparent 70%);
+  background: radial-gradient(circle, rgba(244, 169, 0, 0.18), transparent 70%);
 }
 
 .orb-emerald {
-  background: radial-gradient(circle, rgba(19, 136, 8, 0.10), transparent 70%);
+  background: radial-gradient(circle, rgba(27, 67, 50, 0.15), transparent 70%);
   animation-delay: -2s;
 }
 
 .orb-indigo {
-  background: radial-gradient(circle, rgba(0, 48, 135, 0.14), transparent 70%);
+  background: radial-gradient(circle, rgba(45, 106, 79, 0.12), transparent 70%);
   animation-delay: -4s;
 }
 
@@ -549,9 +598,9 @@
 
 .hash-display {
   font-family: 'Courier New', monospace;
-  background: var(--gov-navy-pale);
+  background: var(--gov-primary-pale);
   border: 1px solid var(--gov-border-dk);
-  color: var(--gov-navy);
+  color: var(--gov-primary);
   font-size: 11px;
   letter-spacing: 0.06em;
 }
@@ -571,7 +620,7 @@
   top: 100%;
   width: 2px;
   height: 12px;
-  background: linear-gradient(180deg, var(--gov-navy-mid), transparent);
+  background: linear-gradient(180deg, var(--gov-primary-light), transparent);
 }
 
 /* ===================================
@@ -590,13 +639,13 @@
    =================================== */
 
 .gov-section-header {
-  border-left: 4px solid var(--gov-navy);
+  border-left: 4px solid var(--gov-primary);
   padding-left: 12px;
   margin-bottom: 16px;
 }
 
 .gov-section-header.saffron {
-  border-left-color: var(--gov-saffron);
+  border-left-color: var(--gov-gold);
 }
 
 /* ===================================
@@ -613,8 +662,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: var(--gov-navy-light);
-  color: var(--gov-navy);
+  background: var(--gov-primary-pale);
+  color: var(--gov-primary);
   border: 1px solid var(--gov-border-dk);
 }
 
@@ -624,7 +673,7 @@
 
 .gov-stat {
   border: 1px solid var(--gov-border);
-  border-bottom: 3px solid var(--gov-saffron);
+  border-bottom: 3px solid var(--gov-gold);
   background: var(--gov-white);
   border-radius: 4px;
   padding: 16px;
@@ -634,7 +683,7 @@
 .gov-stat .stat-number {
   font-size: 28px;
   font-weight: 800;
-  color: var(--gov-navy);
+  color: var(--gov-primary);
   line-height: 1;
 }
 

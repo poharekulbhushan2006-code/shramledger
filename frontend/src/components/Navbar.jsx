@@ -56,12 +56,12 @@ export default function Navbar({
   ];
 
   const PORTAL_MODES = [
-    { id: 'worker',   label: 'Worker App',          icon: Users,       activeColor: 'bg-white text-[#003087]' },
-    { id: 'employer', label: 'Employer / Contractor', icon: Building2,   activeColor: 'bg-white text-[#003087]' },
-    { id: 'lender',   label: 'Bank / NBFC',          icon: Landmark,    activeColor: 'bg-white text-[#003087]' },
-    { id: 'ngo',      label: 'NGO / Welfare',        icon: Building,    activeColor: 'bg-white text-[#003087]' },
-    { id: 'admin',    label: 'Fraud & Audit',        icon: ShieldAlert, activeColor: 'bg-white text-[#003087]' },
-    { id: 'verifier', label: 'Public Verifier',      icon: ShieldCheck, activeColor: 'bg-white text-[#003087]' }
+    { id: 'worker',   label: 'Worker App',          icon: Users,       activeColor: 'bg-white text-[#1B4332]' },
+    { id: 'employer', label: 'Employer / Contractor', icon: Building2,   activeColor: 'bg-white text-[#1B4332]' },
+    { id: 'lender',   label: 'Bank / NBFC',          icon: Landmark,    activeColor: 'bg-white text-[#1B4332]' },
+    { id: 'ngo',      label: 'NGO / Welfare',        icon: Building,    activeColor: 'bg-white text-[#1B4332]' },
+    { id: 'admin',    label: 'Fraud & Audit',        icon: ShieldAlert, activeColor: 'bg-white text-[#1B4332]' },
+    { id: 'verifier', label: 'Public Verifier',      icon: ShieldCheck, activeColor: 'bg-white text-[#1B4332]' }
   ];
 
   return (
@@ -110,7 +110,7 @@ export default function Navbar({
             ? 'shadow-lg shadow-blue-900/20'
             : ''
         }`}
-        style={{ background: '#003087', borderBottom: '3px solid #FF6B00' }}
+        style={{ background: '#1B4332', borderBottom: '3px solid #F4A900' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[64px] gap-3">
@@ -119,7 +119,7 @@ export default function Navbar({
             <div className="flex items-center space-x-3 min-w-0 flex-shrink-0">
               <div className="relative flex-shrink-0">
                 <div className="w-10 h-10 rounded-lg bg-white p-[2px] shadow-md animate-glow-pulse">
-                  <div className="w-full h-full bg-[#003087] rounded-md flex items-center justify-center">
+                  <div className="w-full h-full bg-[#1B4332] rounded-md flex items-center justify-center">
                     <ShieldCheck className="w-5 h-5 text-white" />
                   </div>
                 </div>
@@ -158,7 +158,7 @@ export default function Navbar({
                     onClick={() => setViewMode(mode.id)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-all ${
                       isActive
-                        ? 'bg-[#FF6B00] text-white shadow-sm'
+                        ? 'bg-[#F4A900] text-[#0D2B20] shadow-sm font-bold'
                         : 'text-white/75 hover:text-white hover:bg-white/15'
                     }`}
                   >
@@ -177,7 +177,7 @@ export default function Navbar({
                 className="px-3 py-1.5 rounded bg-white/10 border border-white/25 text-xs font-semibold text-white focus:outline-none"
               >
                 {PORTAL_MODES.map(m => (
-                  <option key={m.id} value={m.id} className="bg-[#003087] text-white">{m.label}</option>
+                  <option key={m.id} value={m.id} className="bg-[#1B4332] text-white">{m.label}</option>
                 ))}
               </select>
             </div>
@@ -208,7 +208,7 @@ export default function Navbar({
               <button
                 onClick={onOpenOnboarding}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded font-black text-xs shadow-md transition-all hover:scale-105"
-                style={{ background: '#FF6B00', color: '#fff', border: '1.5px solid #d45800' }}
+                style={{ background: '#F4A900', color: '#0D2B20', border: '1.5px solid #C8860A' }}
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Register Worker</span>
@@ -241,7 +241,7 @@ export default function Navbar({
                           onClick={() => { setSelectedWorker(w); setWorkerDropOpen(false); }}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-all text-left text-xs group ${
                             selectedWorker?.id === w.id
-                              ? 'bg-blue-50 border border-blue-200 text-blue-900'
+                              ? 'bg-green-50 border border-green-300 text-green-900'
                               : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
                           }`}
                         >
@@ -251,7 +251,7 @@ export default function Navbar({
                             <p className="text-[10px] text-gray-400 truncate">{w.primary_trade.split('/')[0].trim()} · {w.city}</p>
                           </div>
                           {selectedWorker?.id === w.id && (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 ml-auto shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 ml-auto shrink-0" style={{color:'#1B4332'}} />
                           )}
                         </button>
                       ))}
@@ -269,7 +269,7 @@ export default function Navbar({
                   className="bg-transparent text-white text-xs focus:outline-none cursor-pointer appearance-none pr-1"
                 >
                   {languages.map((l) => (
-                    <option key={l.code} value={l.code} className="bg-[#003087] text-white">{l.label}</option>
+                    <option key={l.code} value={l.code} className="bg-[#1B4332] text-white">{l.label}</option>
                   ))}
                 </select>
               </div>
@@ -287,7 +287,7 @@ export default function Navbar({
 
         {/* Mobile Dropdown */}
         {mobileOpen && (
-          <div className="xl:hidden border-t border-white/10 px-4 pb-4 pt-3 space-y-3 animate-slide-up" style={{background:'#001f5e'}}>
+          <div className="xl:hidden border-t border-white/10 px-4 pb-4 pt-3 space-y-3 animate-slide-up" style={{background:'#0D2B20'}}>
             <div className="grid grid-cols-2 gap-2">
               {PORTAL_MODES.map((mode) => (
                 <button
@@ -298,7 +298,7 @@ export default function Navbar({
                       ? 'text-white'
                       : 'bg-white/10 text-white/70'
                   }`}
-                  style={viewMode === mode.id ? {background:'#FF6B00'} : {}}
+                  style={viewMode === mode.id ? {background:'#F4A900', color:'#0D2B20'} : {}}
                 >
                   <mode.icon className="w-4 h-4" />
                   <span>{mode.label}</span>
