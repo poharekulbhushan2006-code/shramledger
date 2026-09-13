@@ -1,6 +1,7 @@
 import pytest
+import hashlib
 from fastapi.testclient import TestClient
-from app.main import app, WORKERS_CACHE
+from app.main import app, WORKERS_CACHE, ACTIVE_OTP_STORE
 from app.speech_nlp_engine import IndicSpeechNLPEngine
 from app.ocr_engine import OCREngine
 from app.validator import WageValidator
@@ -23,21 +24,53 @@ def test_root_endpoint():
     data = response.json()
     assert "ShramLedger" in data["app"]
     assert data["status"] == "online"
+    # SECURITY: internal counts must not be exposed
+    assert "active_profiles" not in data
+    assert "database" not in data
 
 def test_otp_and_dpdp_onboarding():
+    test_phone = "+91 98765 43210"
+    # Server normalises by stripping spaces and dashes only (not + prefix)
+    clean_phone = test_phone.replace(" ", "").replace("-", "")  # "+919876543210"
+
     # 1. Request OTP
-    otp_res = client.post("/api/auth/otp", json={"phone": "+91 98765 43210"})
+    otp_res = client.post("/api/auth/otp", json={"phone": test_phone})
     assert otp_res.status_code == 200
     assert otp_res.json()["status"] == "OTP_SENT"
+    # SECURITY: OTP must NOT be in the response body
+    assert "otp" not in otp_res.json()
+    assert "sms_preview" not in otp_res.json()
 
-    # 2. Verify OTP
-    verify_res = client.post("/api/auth/verify-otp", json={"phone": "+91 98765 43210", "otp": "8492"})
+    # 2a. SECURITY TEST: The old bypass code '8492' must be REJECTED
+    # It returns 422 (validation error: OTP must be 6 digits) or 400 (invalid OTP)
+    # Both responses confirm the bypass is completely blocked.
+    bypass_res = client.post("/api/auth/verify-otp", json={"phone": test_phone, "otp": "8492"})
+    assert bypass_res.status_code in (400, 422), f"Security failure: '8492' bypass returned {bypass_res.status_code}"
+
+    # 2b. Retrieve the actual OTP from the in-memory store (test-only access)
+    stored = ACTIVE_OTP_STORE.get(clean_phone)
+    assert stored is not None, "OTP was not stored in ACTIVE_OTP_STORE"
+    stored_hash = stored["otp_hash"]
+    # Brute-force find the 6-digit OTP that matches the hash (test environment only)
+    real_otp = None
+    for candidate in range(100000, 1000000):
+        if hashlib.sha256(str(candidate).encode()).hexdigest() == stored_hash:
+            real_otp = str(candidate)
+            break
+    assert real_otp is not None, "Could not recover OTP from hash — check store"
+
+    # 2c. Verify with the correct real OTP
+    verify_res = client.post("/api/auth/verify-otp", json={"phone": test_phone, "otp": real_otp})
     assert verify_res.status_code == 200
-    assert verify_res.json()["status"] == "VERIFIED"
+    v_data = verify_res.json()
+    assert v_data["status"] == "VERIFIED"
+    # SECURITY: Must return a real JWT, not a UUID placeholder
+    assert "access_token" in v_data
+    assert len(v_data["access_token"]) > 20
 
     # 3. Register worker with DPDP consent
     onboard_payload = {
-        "phone": "+91 98765 43210",
+        "phone": test_phone,
         "name": "Kailash Chand (कैलाश चंद)",
         "age": 35,
         "gender": "Male",

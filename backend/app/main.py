@@ -1,12 +1,16 @@
 import os
 import uuid
-from datetime import datetime, timedelta
+import secrets
+import hashlib
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends, Query, Body, Header
+from fastapi import FastAPI, HTTPException, Depends, Query, Body, Header, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from jose import JWTError, jwt
 
 from .database import get_db, init_db, SessionLocal
 from .db_models import (
@@ -150,23 +154,93 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "OPTIONS"],  # DELETE removed; use PATCH /revoke
     allow_headers=["Content-Type", "Authorization", "x-api-key", "x-dpdp-purpose"],
 )
 
+# -------------------------------------------------------------------------
+# SECURITY HEADERS MIDDLEWARE
+# Adds browser-enforced security headers to every response.
+# -------------------------------------------------------------------------
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: StarletteRequest, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        # Remove server identification header
+        try:
+            del response.headers["server"]
+        except KeyError:
+            pass
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 @app.get("/")
 def root():
+    # SECURITY: Never expose internal counts or DB details in production.
+    # This is safe minimal info for health checks.
     return {
         "app": "ShramLedger Enterprise API",
         "tagline": "Tamper-Evident Employment & Income Verification Platform",
         "status": "online",
-        "version": "2.0.0",
-        "active_profiles": len(WORKERS_CACHE),
-        "database": "SQLAlchemy Persistent Relational Engine"
+        "version": "2.0.0"
     }
 
-# In-memory OTP storage
+# In-memory OTP storage — stores HASH of OTP, never the plaintext
 ACTIVE_OTP_STORE: Dict[str, Dict[str, Any]] = {}
+
+# OTP rate-limit tracker: {phone: [timestamp, ...]}
+OTP_RATE_LIMIT: Dict[str, List[float]] = {}
+
+# =========================================================================
+# JWT CONFIGURATION
+# =========================================================================
+# SECURITY: In production, set SHRAM_JWT_SECRET env var to a random 64-char string.
+# Never hardcode secrets in source code.
+JWT_SECRET_KEY = os.environ.get(
+    "SHRAM_JWT_SECRET",
+    "CHANGE_ME_IN_PRODUCTION_USE_A_LONG_RANDOM_STRING_MIN_32_CHARS_00001"
+)
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRE_MINUTES = 60  # 1-hour access tokens
+
+def _create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=JWT_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
+    return jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+_bearer_scheme = HTTPBearer(auto_error=False)
+
+def get_current_worker(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)
+) -> str:
+    """FastAPI dependency — validates JWT and returns worker_id."""
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please log in.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        worker_id: Optional[str] = payload.get("sub")
+        if worker_id is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload.")
+        return worker_id
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token is invalid or has expired. Please log in again.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 # =========================================================================
 # 1. AUTH & DPDP ONBOARDING ROUTES
@@ -176,27 +250,52 @@ OTP_EXPIRY_SECONDS = 600  # 10 minutes
 
 @app.post("/api/auth/otp")
 def send_otp(req: OTPRequest):
-    import random
+    """Request an OTP. OTP is generated securely and stored as a hash. Never returned in response."""
     clean_phone = req.phone.replace(" ", "").replace("-", "")
-    generated_otp = str(random.randint(100000, 999999))
+
+    # --- RATE LIMITING: max 3 OTP requests per phone per 10 minutes ---
+    import time
+    now_ts = time.time()
+    window_seconds = 600  # 10 minutes
+    max_otps = 3
+    rate_history = OTP_RATE_LIMIT.get(clean_phone, [])
+    # Purge entries outside the window
+    rate_history = [t for t in rate_history if now_ts - t < window_seconds]
+    if len(rate_history) >= max_otps:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many OTP requests. Please wait before requesting another OTP."
+        )
+    rate_history.append(now_ts)
+    OTP_RATE_LIMIT[clean_phone] = rate_history
+    # ---------------------------------------------------------------
+
+    # Use cryptographically secure random OTP (secrets module, not random)
+    generated_otp = str(secrets.randbelow(900000) + 100000)
+    otp_hash = hashlib.sha256(generated_otp.encode()).hexdigest()
 
     ACTIVE_OTP_STORE[clean_phone] = {
-        "otp": generated_otp,
-        "generated_at": datetime.utcnow().isoformat()
+        "otp_hash": otp_hash,  # Store HASH, never plaintext
+        "generated_at": datetime.now(timezone.utc).isoformat()
     }
 
-    # NOTE: In production, send OTP via SMS/WhatsApp gateway here.
-    # e.g., send_sms(clean_phone, f"Your ShramLedger OTP is {generated_otp}. Valid 10 min.")
-    # The OTP is NEVER returned in the API response.
+    # PRODUCTION NOTE: Deliver OTP via SMS/WhatsApp gateway here:
+    # sms_gateway.send(clean_phone, f"Your ShramLedger OTP is {generated_otp}. Valid 10 min.")
+    # The OTP value is intentionally NOT included in this API response.
+
+    # In demo/dev mode: OTP is printed to server console only for testing
+    is_demo = os.environ.get("SHRAM_ENV", "development") == "development"
+    if is_demo:
+        print(f"[DEMO MODE] OTP for {clean_phone}: {generated_otp}")
+
     return {
         "status": "OTP_SENT",
-        "message": f"Verification code sent to {req.phone}. Valid for 10 minutes.",
-        "otp": generated_otp,
-        "sms_preview": f"Your ShramLedger verification OTP is {generated_otp}. Valid for 10 minutes."
+        "message": f"Verification code sent to {req.phone}. Valid for 10 minutes."
     }
 
 @app.post("/api/auth/verify-otp")
 def verify_otp(req: OTPVerifyRequest):
+    """Verify OTP by comparing hash. Issues a short-lived JWT on success."""
     clean_phone = req.phone.replace(" ", "").replace("-", "")
     stored_data = ACTIVE_OTP_STORE.get(clean_phone)
 
@@ -205,17 +304,41 @@ def verify_otp(req: OTPVerifyRequest):
 
     # Enforce 10-minute expiry
     generated_at = datetime.fromisoformat(stored_data["generated_at"])
-    elapsed_seconds = (datetime.utcnow() - generated_at).total_seconds()
+    elapsed_seconds = (datetime.now(timezone.utc) - generated_at).total_seconds()
     if elapsed_seconds > OTP_EXPIRY_SECONDS:
         ACTIVE_OTP_STORE.pop(clean_phone, None)
         raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
 
-    if stored_data.get("otp") != req.otp and req.otp != "8492":
+    # Compare hash of submitted OTP against stored hash (no hardcoded bypass)
+    submitted_hash = hashlib.sha256(req.otp.encode()).hexdigest()
+    if not secrets.compare_digest(stored_data.get("otp_hash", ""), submitted_hash):
         raise HTTPException(status_code=400, detail="Invalid verification code. Please check and retry.")
 
     # OTP consumed — remove from store to prevent replay attacks
     ACTIVE_OTP_STORE.pop(clean_phone, None)
-    return {"status": "VERIFIED", "phone": req.phone, "token": f"SHRAM_TOKEN_{uuid.uuid4().hex[:12]}"}
+
+    # Find the worker ID associated with this phone
+    worker_id = next(
+        (wid for wid, w in WORKERS_CACHE.items() if w.phone == req.phone),
+        None
+    )
+
+    # Issue JWT with worker identity
+    token_data = {
+        "sub": worker_id or clean_phone,  # subject = worker_id or phone if not onboarded yet
+        "phone": clean_phone,
+        "role": "worker",
+    }
+    access_token = _create_access_token(token_data)
+
+    return {
+        "status": "VERIFIED",
+        "phone": req.phone,
+        "worker_id": worker_id,
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": JWT_EXPIRE_MINUTES * 60
+    }
 
 
 @app.post("/api/onboard/worker", response_model=WorkerProfile)
@@ -295,15 +418,15 @@ def onboard_worker(req: WorkerOnboardingRequest, db: Session = Depends(get_db)):
         dpdp_notice_version="v1.0-2026",
         is_active=True,
         ttl_days=consent_ttl_days,
-        expires_at=datetime.utcnow() + timedelta(days=consent_ttl_days),
-        consent_proof_hash=MerkleTree.sha256(f"{worker_id}:{req.phone}:{datetime.utcnow().isoformat()}")
+        expires_at=datetime.now(timezone.utc) + timedelta(days=consent_ttl_days),
+        consent_proof_hash=MerkleTree.sha256(f"{worker_id}:{req.phone}:{datetime.now(timezone.utc).isoformat()}")
     )
     db.add(consent_db)
 
     initial_entry = WorkEntry(
         id=f"WRK-LOG-{uuid.uuid4().hex[:6].upper()}",
         worker_id=worker_id,
-        date=datetime.utcnow().strftime("%Y-%m-%d"),
+        date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         employer_name="Self-Attested Initial Profile",
         skill_type=req.primary_trade,
         skill_category=req.skill_tier,
@@ -359,7 +482,7 @@ def onboard_worker(req: WorkerOnboardingRequest, db: Session = Depends(get_db)):
         city=req.city,
         aadhaar_masked=masked_aadhaar,
         avatar_url=avatar_url,
-        joined_date=datetime.utcnow().strftime("%Y-%m-%d"),
+        joined_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         dpdp_consent_accepted=True,
         work_entries=[initial_entry]
     )
@@ -378,7 +501,7 @@ def revoke_consent(req: ConsentRevokeRequest, db: Session = Depends(get_db)):
     
     consent.is_active = False
     consent.is_revoked = True
-    consent.revoked_at = datetime.utcnow()
+    consent.revoked_at = datetime.now(timezone.utc)
     db.commit()
 
     AuditLogger.log(
@@ -472,33 +595,50 @@ def add_work_entry(worker_id: str, entry: WorkEntry, db: Session = Depends(get_d
 
     return entry
 
-@app.delete("/api/entries/{worker_id}/{entry_id}")
-def delete_work_entry(worker_id: str, entry_id: str, db: Session = Depends(get_db)):
+@app.patch("/api/entries/{worker_id}/{entry_id}/revoke")
+def revoke_work_entry(worker_id: str, entry_id: str, db: Session = Depends(get_db)):
+    """Non-destructive ledger revocation — marks entry as REVOKED instead of deleting.
+    
+    Ledger entries are IMMUTABLE. This preserves the audit trail.
+    The entry remains in the database and is visible in the audit log,
+    but is excluded from income/score calculations.
+    """
     if worker_id not in WORKERS_CACHE:
         raise HTTPException(status_code=404, detail="Worker not found")
-    
+
     worker = WORKERS_CACHE[worker_id]
-    original_count = len(worker.work_entries)
-    worker.work_entries = [e for e in worker.work_entries if e.id != entry_id]
-    
-    if len(worker.work_entries) == original_count:
+    target_entry = next((e for e in worker.work_entries if e.id == entry_id), None)
+
+    if not target_entry:
         raise HTTPException(status_code=404, detail="Entry not found")
-    
+
+    # Soft-revoke in DB — never DELETE ledger records
     db_entry = db.query(WorkEntryDB).filter(WorkEntryDB.id == entry_id).first()
     if db_entry:
-        db.delete(db_entry)
+        db_entry.endorsement_status = "REVOKED"
+        db_entry.endorsement_note = f"Revoked at {datetime.now(timezone.utc).isoformat()} by worker {worker_id}"
         db.commit()
+
+    # Update in-memory cache
+    target_entry.endorsement_status = EndorsementStatus.REVOKED if hasattr(EndorsementStatus, 'REVOKED') else target_entry.endorsement_status
+    target_entry.endorsement_note = f"REVOKED — excluded from calculations"
 
     AuditLogger.log(
         actor_id=worker_id,
         actor_role="Worker",
-        action="DELETED_WORK_ENTRY",
+        action="REVOKED_WORK_ENTRY",
         resource_type="WorkEntry",
         resource_id=entry_id,
+        ledger_hash=target_entry.entry_hash,
         db=db
     )
 
-    return {"status": "deleted", "entry_id": entry_id}
+    return {
+        "status": "REVOKED",
+        "entry_id": entry_id,
+        "message": "Entry has been revoked (non-destructive). Audit trail preserved.",
+        "revoked_at": datetime.now(timezone.utc).isoformat()
+    }
 
 # =========================================================================
 # 3. MULTIMODAL INGESTION ROUTES (VOICE & 9-DOCUMENT OCR)
@@ -696,7 +836,7 @@ def employer_verification_action(req: EmployerActionRequest, db: Session = Depen
             "worker_name": target_worker.name,
             "status": found_entry.endorsement_status.value,
             "note": req.note,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         },
         ledger_hash=found_entry.entry_hash,
         db=db
@@ -762,7 +902,7 @@ def get_lender_income_summary(
         consent_id=consent_id or f"DPDP-CSN-{worker_id.upper()[:8]}",
         tamper_audit_status="MERKLE_VERIFIED_GENUINE",
         merkle_root=merkle_root,
-        last_verified_timestamp=datetime.utcnow().strftime("%d %b %Y, %H:%M UTC")
+        last_verified_timestamp=datetime.now(timezone.utc).strftime("%d %b %Y, %H:%M UTC")
     )
 
 # =========================================================================
@@ -1441,7 +1581,6 @@ def execute_payout_batch(req: PayoutBatchRequest, db: Session = Depends(get_db))
         db=db
     )
     return res
-
 @app.get("/api/enterprise/bocw-report", response_model=BOCWReportResponse)
 def get_bocw_statutory_compliance_report(site_id: str = "site_delhi_metro_04"):
     """

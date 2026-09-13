@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from enum import Enum
+import re
 
 class EvidenceType(str, Enum):
     WAGE_SLIP = "wage_slip"
@@ -35,6 +36,7 @@ class EndorsementStatus(str, Enum):
     REJECTED = "rejected"
     DISPUTED = "disputed"
     SELF_ATTESTED = "self_attested"
+    REVOKED = "revoked"  # Non-destructive soft-delete status
 
 # ----------------- WORK ENTRY DTOs -----------------
 
@@ -43,25 +45,35 @@ class WorkEntry(BaseModel):
     worker_id: str
     date: str
     employer_id: Optional[str] = None
-    employer_name: str
+    employer_name: str = Field(..., min_length=2, max_length=200)
     employer_phone: Optional[str] = None
-    skill_type: str # e.g. "Mason / राजमिस्त्री"
+    skill_type: str = Field(..., min_length=2, max_length=120)
     skill_category: SkillCategory = SkillCategory.SKILLED
-    location: str # e.g. "Delhi NCR", "Pune", "Varanasi"
-    hours_worked: float = 8.0
-    amount_paid: float
-    payment_mode: str = "Cash" # Cash, UPI, Bank Transfer
+    location: str = Field(..., min_length=2, max_length=200)
+    hours_worked: float = Field(8.0, ge=0.5, le=24.0)  # Must be 0.5–24 hrs
+    amount_paid: float = Field(..., ge=0.0, le=99999.0)  # Sanity cap: ₹99,999/day
+    payment_mode: str = "Cash"  # Cash, UPI, Bank Transfer
     evidence_type: EvidenceType = EvidenceType.MANUAL_ENTRY
     evidence_url: Optional[str] = None
-    evidence_text: Optional[str] = None
-    confidence_score: float = 85.0 # 0-100%
+    evidence_text: Optional[str] = Field(None, max_length=2000)
+    confidence_score: float = Field(85.0, ge=0.0, le=100.0)
     evidence_strength_band: EvidenceStrengthBand = EvidenceStrengthBand.MEDIUM
     endorsement_status: EndorsementStatus = EndorsementStatus.SELF_ATTESTED
-    endorsement_note: Optional[str] = None
+    endorsement_note: Optional[str] = Field(None, max_length=500)
     entry_hash: Optional[str] = None
     is_anomaly_flagged: bool = False
     anomaly_reason: Optional[str] = None
     timestamp: Optional[str] = None
+
+    @field_validator('date')
+    @classmethod
+    def validate_date(cls, v: str) -> str:
+        """Enforce ISO 8601 date format YYYY-MM-DD."""
+        try:
+            datetime.strptime(v, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("date must be in YYYY-MM-DD format")
+        return v
 
 class CreateWorkEntryRequest(BaseModel):
     date: str
@@ -81,23 +93,39 @@ class CreateWorkEntryRequest(BaseModel):
 # ----------------- ONBOARDING & DPDP CONSENT -----------------
 
 class OTPRequest(BaseModel):
-    phone: str
+    phone: str = Field(..., min_length=10, max_length=15)
+
+    @field_validator('phone')
+    @classmethod
+    def validate_phone(cls, v: str) -> str:
+        """Reject non-numeric phone numbers (allow spaces, dashes, + prefix)."""
+        clean = re.sub(r'[\s\-\+]', '', v)
+        if not re.match(r'^\d{10,12}$', clean):
+            raise ValueError("Phone number must be 10-12 digits")
+        return v
 
 class OTPVerifyRequest(BaseModel):
-    phone: str
-    otp: str
+    phone: str = Field(..., min_length=10, max_length=15)
+    otp: str = Field(..., min_length=6, max_length=6, pattern=r'^\d{6}$')
 
 class WorkerOnboardingRequest(BaseModel):
-    phone: str
-    name: str
-    age: int = 30
-    gender: str = "Male"
-    primary_trade: str
+    phone: str = Field(..., min_length=10, max_length=15)
+    name: str = Field(..., min_length=2, max_length=100)
+    age: int = Field(18, ge=14, le=80)
+    gender: str = Field("Male", pattern=r'^(Male|Female|Other)$')
+    primary_trade: str = Field(..., min_length=2, max_length=100)
     skill_tier: SkillCategory = SkillCategory.SKILLED
-    state: str
-    city: str
+    state: str = Field(..., min_length=2, max_length=60)
+    city: str = Field(..., min_length=2, max_length=60)
     language_preference: str = "hi"
     dpdp_consent_accepted: bool = True
+
+    @field_validator('dpdp_consent_accepted')
+    @classmethod
+    def consent_must_be_given(cls, v: bool) -> bool:
+        if not v:
+            raise ValueError("DPDP consent must be accepted to register")
+        return v
 
 class DPDPConsentRecordDTO(BaseModel):
     consent_id: str

@@ -180,78 +180,86 @@ export default function AdminFraudDashboard() {
             </div>
           ) : (
             <div className="space-y-3">
-              {fraudAlerts.map((alert) => (
-                <div
-                  key={alert.alert_id}
-                  className={`glass-card p-5 rounded-3xl border transition-all space-y-3 ${
-                    alert.status === 'RESOLVED' 
-                      ? 'border-emerald-500/20 opacity-70' 
-                      : alert.severity === 'HIGH'
-                      ? 'border-red-500/40 bg-red-950/10'
-                      : 'border-amber-500/30 bg-amber-950/10'
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                        alert.severity === 'HIGH' 
-                          ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
-                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      }`}>
-                        {alert.alert_type}
-                      </span>
-                      <span className="text-xs text-slate-400 font-mono">
-                        ID: {alert.alert_id}
-                      </span>
+              {fraudAlerts.map((alert, idx) => {
+                const alertId = alert.alert_id || alert.id || `ALT-${idx}`;
+                const alertType = alert.alert_type || alert.type || 'ANOMALY';
+                const severity = (alert.severity || 'MEDIUM').toUpperCase();
+                const status = (alert.status || 'PENDING_REVIEW').toUpperCase();
+                const isPending = status.includes('PENDING') || status.includes('INVESTIGATING');
+                const isResolved = status === 'RESOLVED';
+                return (
+                  <div
+                    key={alertId}
+                    className={`glass-card p-5 rounded-3xl border transition-all space-y-3 ${
+                      isResolved 
+                        ? 'border-emerald-500/20 opacity-70' 
+                        : severity === 'HIGH'
+                        ? 'border-red-500/40 bg-red-950/10'
+                        : 'border-amber-500/30 bg-amber-950/10'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          severity === 'HIGH' 
+                            ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
+                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        }`}>
+                          {alertType}
+                        </span>
+                        <span className="text-xs text-slate-400 font-mono">
+                          ID: {alertId}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <span>Detected: {alert.detected_at || alert.timestamp}</span>
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                          isResolved ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-300'
+                        }`}>
+                          {status}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <span>Detected: {alert.detected_at}</span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                        alert.status === 'RESOLVED' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-300'
-                      }`}>
-                        {alert.status}
-                      </span>
-                    </div>
+
+                    <p className="text-sm font-semibold text-slate-200">
+                      {alert.description}
+                    </p>
+
+                    {/* Evidence Snapshot */}
+                    {alert.evidence_snapshot && (
+                      <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-400 space-y-1">
+                        {Object.entries(alert.evidence_snapshot).map(([k, v]) => (
+                          <div key={k} className="flex justify-between">
+                            <span className="text-slate-500">{k}:</span>
+                            <span className="text-slate-200">{String(v)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Investigator Actions */}
+                    {isPending && (
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          onClick={() => handleResolveAlert(alertId, 'resolve')}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 transition-all"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Mark Resolved (Approved)</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleResolveAlert(alertId, 'dismiss')}
+                          className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Dismiss Alert</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
-
-                  <p className="text-sm font-semibold text-slate-200">
-                    {alert.description}
-                  </p>
-
-                  {/* Evidence Snapshot */}
-                  {alert.evidence_snapshot && (
-                    <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-400 space-y-1">
-                      {Object.entries(alert.evidence_snapshot).map(([k, v]) => (
-                        <div key={k} className="flex justify-between">
-                          <span className="text-slate-500">{k}:</span>
-                          <span className="text-slate-200">{String(v)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Investigator Actions */}
-                  {alert.status === 'PENDING_REVIEW' && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <button
-                        onClick={() => handleResolveAlert(alert.alert_id, 'resolve')}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 transition-all"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Mark Resolved (Approved)</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleResolveAlert(alert.alert_id, 'dismiss')}
-                        className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        <span>Dismiss Alert</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -411,17 +419,17 @@ export default function AdminFraudDashboard() {
                 {auditLogs
                   .filter(l => 
                     !auditSearch || 
-                    l.actor_id?.toLowerCase().includes(auditSearch.toLowerCase()) ||
-                    l.action?.toLowerCase().includes(auditSearch.toLowerCase()) ||
-                    l.resource_type?.toLowerCase().includes(auditSearch.toLowerCase()) ||
-                    l.ledger_hash?.toLowerCase().includes(auditSearch.toLowerCase())
+                    (l.actor_id || l.actor || '')?.toLowerCase().includes(auditSearch.toLowerCase()) ||
+                    (l.action || '')?.toLowerCase().includes(auditSearch.toLowerCase()) ||
+                    (l.resource_type || l.entity || '')?.toLowerCase().includes(auditSearch.toLowerCase()) ||
+                    (l.ledger_hash || '')?.toLowerCase().includes(auditSearch.toLowerCase())
                   )
-                  .map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-900/40 transition-colors">
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-400">{log.id}</td>
+                  .map((log, idx) => (
+                  <tr key={log.id || idx} className="hover:bg-slate-900/40 transition-colors">
+                    <td className="py-3 px-4 font-mono text-[11px] text-slate-400">{log.id || `AUD-${idx + 1}`}</td>
                     <td className="py-3 px-4 text-slate-400 text-[11px]">{log.timestamp}</td>
                     <td className="py-3 px-4 font-bold text-amber-300">
-                      {log.actor_id} ({log.actor_role})
+                      {log.actor_id || log.actor || 'System'} ({log.actor_role || 'Node'})
                     </td>
                     <td className="py-3 px-4 font-semibold text-slate-200">
                       <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[11px]">
@@ -429,7 +437,7 @@ export default function AdminFraudDashboard() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-slate-400">
-                      {log.resource_type} (#{log.resource_id?.slice(-6)})
+                      {log.resource_type || log.entity || 'Ledger'} (#{String(log.resource_id || '').slice(-6) || 'GEN'})
                     </td>
                     <td className="py-3 px-4 font-mono text-[10px] text-emerald-400">
                       {log.ledger_hash ? `${log.ledger_hash.slice(0, 12)}...` : 'N/A'}

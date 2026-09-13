@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from .models import WorkEntry, FraudAlert, SkillCategory
 from .validator import WageValidator
 
@@ -42,7 +42,7 @@ class FraudDetector:
                         alert_type="SHIFT_COLLISION",
                         severity="HIGH",
                         description=f"Potential duplicate shift: Worker logged two distinct employers on {new_entry.date} ('{existing.employer_name}' and '{new_entry.employer_name}').",
-                        detected_at=datetime.utcnow().strftime("%d %b %Y, %H:%M UTC"),
+                        detected_at=datetime.now(timezone.utc).strftime("%d %b %Y, %H:%M UTC"),
                         status="PENDING_REVIEW",
                         evidence_snapshot={
                             "date": new_entry.date,
@@ -65,7 +65,7 @@ class FraudDetector:
                 alert_type="WAGE_SPIKE_OUTLIER",
                 severity="MEDIUM",
                 description=f"Wage spike anomaly: Claim of ₹{new_entry.amount_paid:,.0f}/day is {new_entry.amount_paid / benchmark:.1f}x regional statutory benchmark (₹{benchmark:.0f}/day).",
-                detected_at=datetime.utcnow().strftime("%d %b %Y, %H:%M UTC"),
+                detected_at=datetime.now(timezone.utc).strftime("%d %b %Y, %H:%M UTC"),
                 status="PENDING_REVIEW",
                 evidence_snapshot={
                     "claimed_amount": new_entry.amount_paid,
@@ -99,7 +99,7 @@ class FraudDetector:
                     alert_type="DUPLICATE_DOC_HASH",
                     severity="HIGH",
                     description=f"Cross-worker duplicate document reuse: Uploaded slip matches exact cryptographic SHA-256 hash previously submitted by {original['worker_name']} ({original['worker_id']}).",
-                    detected_at=datetime.utcnow().strftime("%d %b %Y, %H:%M UTC"),
+                    detected_at=datetime.now(timezone.utc).strftime("%d %b %Y, %H:%M UTC"),
                     status="PENDING_REVIEW",
                     evidence_snapshot={
                         "doc_hash": doc_hash,
@@ -115,7 +115,7 @@ class FraudDetector:
                 "worker_id": worker_id,
                 "worker_name": worker_name,
                 "doc_title": doc_title,
-                "registered_at": datetime.utcnow().strftime("%d %b %Y, %H:%M UTC")
+                "registered_at": datetime.now(timezone.utc).strftime("%d %b %Y, %H:%M UTC")
             }
         return None
 

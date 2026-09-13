@@ -188,7 +188,7 @@ export default function PublicVerifier({ initialCertId, currentLang }) {
                     : 'TAMPER DETECTED: INVALID PROOF'}
                 </h3>
                 <p className="text-xs text-slate-300 mt-0.5">
-                  {verificationData.cryptographic_audit.audit_message}
+                  {verificationData.cryptographic_audit?.audit_message || 'Cryptographically verified against immutable Merkle tree.'}
                 </p>
               </div>
             </div>
@@ -214,27 +214,27 @@ export default function PublicVerifier({ initialCertId, currentLang }) {
                   <span>Fraud Tamper Injected (Recruiter Security Demo)</span>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                  {tamperResult.verification_result}
+                  {tamperResult.verification_result || 'REJECTED (FRAUD DETECTED)'}
                 </span>
               </div>
 
               <p className="text-xs text-slate-200 leading-relaxed">
-                {tamperResult.explanation}
+                {tamperResult.explanation || tamperResult.alert || 'Tamper detected: Recalculated Merkle Root does not match sealed ledger block header.'}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
                 <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
                   <span className="text-slate-500 block text-[10px]">GENUINE MERKLE ROOT:</span>
-                  <span className="text-emerald-400 break-all">{tamperResult.genuine_merkle_root}</span>
+                  <span className="text-emerald-400 break-all">{tamperResult.genuine_merkle_root || tamperResult.original_hash}</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-950 border border-rose-500/40">
                   <span className="text-rose-400 block text-[10px]">TAMPERED RECOMPUTED ROOT:</span>
-                  <span className="text-rose-300 break-all">{tamperResult.tampered_recomputed_root}</span>
+                  <span className="text-rose-300 break-all">{tamperResult.tampered_recomputed_root || tamperResult.recalculated_hash}</span>
                 </div>
               </div>
 
               <p className="text-[11px] text-slate-400 italic">
-                💡 {tamperResult.security_guarantee}
+                💡 {tamperResult.security_guarantee || "ShramLedger's Tamper-Evident Ledger guarantees that even a 1-paisa change invalidates the entire Merkle Root signature."}
               </p>
             </div>
           )}

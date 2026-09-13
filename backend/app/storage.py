@@ -3,7 +3,7 @@ import hashlib
 import uuid
 import base64
 from typing import Tuple, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 STORAGE_DIR = os.getenv("STORAGE_DIR", os.path.join(os.path.dirname(__file__), "..", "storage_bucket"))
 DOCS_DIR = os.path.join(STORAGE_DIR, "documents")
@@ -58,7 +58,7 @@ class ObjectStorageService:
         if "," in base64_data:
             base64_data = base64_data.split(",")[1]
         raw_bytes = base64.b64decode(base64_data)
-        return cls.store_document(raw_bytes, f"{prefix}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.png")
+        return cls.store_document(raw_bytes, f"{prefix}_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}.png")
 
     @classmethod
     def store_audio(

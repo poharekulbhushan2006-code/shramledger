@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from .models import AuditLogEntryDTO
 from .db_models import AuditLog as AuditLogDB
@@ -29,8 +29,9 @@ class AuditLogger:
         ip_address: str = "127.0.0.1",
         db: Optional[Session] = None
     ) -> AuditLogEntryDTO:
-        log_id = f"AUD-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-        ts_str = datetime.utcnow().strftime("%d %b %Y, %H:%M:%S UTC")
+        now_utc = datetime.now(timezone.utc)
+        log_id = f"AUD-{now_utc.strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        ts_str = now_utc.strftime("%d %b %Y, %H:%M:%S UTC")
 
         entry_dto = AuditLogEntryDTO(
             id=log_id,

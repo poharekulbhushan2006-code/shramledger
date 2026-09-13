@@ -1,7 +1,7 @@
 import hashlib
 import json
 from typing import List, Dict, Any, Tuple, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from .models import WorkEntry, CertificateVerification
 
 class MerkleTree:
@@ -121,11 +121,11 @@ class LedgerEngine:
 
         # Digital Signature — HMAC-SHA256 over certificate payload
         # NOTE: For full ED25519 signing, integrate a KMS or cryptography.hazmat.primitives
-        sig_payload = f"{cert_id}:{merkle_root}:{total_earnings:.2f}:{datetime.utcnow().strftime('%Y%m')}"
+        sig_payload = f"{cert_id}:{merkle_root}:{total_earnings:.2f}:{datetime.now(timezone.utc).strftime('%Y%m')}"
         digital_signature = f"SHRAM_HMAC_SHA256_{hashlib.sha256(sig_payload.encode()).hexdigest()[:24].upper()}"
 
         # Date range & monthly wage estimate
-        dates = sorted([e.date for e in entries]) if entries else [datetime.utcnow().strftime("%Y-%m-%d")]
+        dates = sorted([e.date for e in entries]) if entries else [datetime.now(timezone.utc).strftime("%Y-%m-%d")]
         period_str = f"{dates[0]} to {dates[-1]}" if len(dates) > 1 else f"{dates[0]}"
         distinct_months = len(set([d[:7] for d in dates])) or 1
         avg_monthly = total_earnings / max(distinct_months, 1)
@@ -136,7 +136,7 @@ class LedgerEngine:
             certificate_id=cert_id,
             worker_id=worker_id,
             worker_name=worker_name,
-            issue_date=datetime.utcnow().strftime("%d %B %Y"),
+            issue_date=datetime.now(timezone.utc).strftime("%d %B %Y"),
             primary_trade=primary_trade,
             location=location,
             verified_period=period_str,

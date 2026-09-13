@@ -1,11 +1,14 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import (
     Column, String, Integer, Float, Boolean, DateTime, ForeignKey, 
     Text, Enum as SQLEnum, Index, JSON
 )
 from sqlalchemy.orm import relationship
 from .database import Base
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class Worker(Base):
     __tablename__ = "workers"
@@ -14,8 +17,8 @@ class Worker(Base):
     phone = Column(String(20), unique=True, nullable=False, index=True)
     is_active = Column(Boolean, default=True)
     is_phone_verified = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     # Relationships
     profile = relationship("WorkerProfile", back_populates="worker", uselist=False, cascade="all, delete-orphan")
@@ -42,7 +45,7 @@ class WorkerProfile(Base):
     eshram_uan_masked = Column(String(30), nullable=True)
     avatar_url = Column(String(512), nullable=True)
     dpdp_consent_accepted = Column(Boolean, default=True)
-    dpdp_consent_timestamp = Column(DateTime, default=datetime.utcnow)
+    dpdp_consent_timestamp = Column(DateTime, default=utc_now)
     language_preference = Column(String(10), default="hi")
 
     worker = relationship("Worker", back_populates="profile")
@@ -87,7 +90,7 @@ class WorkEntry(Base):
     entry_hash = Column(String(128), nullable=True, index=True) # Canonical SHA-256
     is_anomaly_flagged = Column(Boolean, default=False)
     anomaly_reason = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     # Relationships
     worker = relationship("Worker", back_populates="work_entries")
@@ -125,7 +128,7 @@ class EvidenceDocument(Base):
     evidence_strength_score = Column(Float, default=85.0)
     extracted_fields_json = Column(JSON, nullable=True)
     is_duplicate_flagged = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     work_entry = relationship("WorkEntry", back_populates="evidence_document")
 
@@ -140,7 +143,7 @@ class VoiceRecord(Base):
     raw_transcript = Column(Text, nullable=False)
     nlp_confidence = Column(Float, default=88.0)
     parsed_entities_json = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     work_entry = relationship("WorkEntry", back_populates="voice_record")
 
@@ -158,7 +161,7 @@ class Employer(Base):
     gstin_optional = Column(String(30), nullable=True)
     verified_workers_count = Column(Integer, default=0)
     reputation_score = Column(Float, default=92.0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     work_entries = relationship("WorkEntry", back_populates="employer")
     endorsements = relationship("Endorsement", back_populates="employer")
@@ -173,7 +176,7 @@ class Contractor(Base):
     active_sites = Column(Integer, default=3)
     crew_size = Column(Integer, default=25)
     verification_speed_hours = Column(Float, default=4.5)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class Endorsement(Base):
     __tablename__ = "endorsements"
@@ -185,8 +188,8 @@ class Endorsement(Base):
     endorser_phone = Column(String(20), nullable=False)
     status = Column(String(50), default="verified") # verified, rejected, disputed
     remarks = Column(Text, nullable=True)
-    cryptographic_timestamp = Column(String(64), default=lambda: datetime.utcnow().isoformat())
-    created_at = Column(DateTime, default=datetime.utcnow)
+    cryptographic_timestamp = Column(String(64), default=lambda: utc_now().isoformat())
+    created_at = Column(DateTime, default=utc_now)
 
     work_entry = relationship("WorkEntry", back_populates="endorsement")
     employer = relationship("Employer", back_populates="endorsements")
@@ -202,7 +205,7 @@ class Verification(Base):
     consent_id = Column(String(64), nullable=True)
     is_verified_authentic = Column(Boolean, default=True)
     tamper_status = Column(String(50), default="CLEAN")
-    requested_at = Column(DateTime, default=datetime.utcnow)
+    requested_at = Column(DateTime, default=utc_now)
 
 class ShramScore(Base):
     __tablename__ = "shram_scores"
@@ -228,7 +231,7 @@ class ShramScore(Base):
     
     factors_positive_json = Column(JSON, default=list)
     factors_improvement_json = Column(JSON, default=list)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     worker = relationship("Worker", back_populates="shram_score")
 
@@ -243,7 +246,7 @@ class SchemeEligibility(Base):
     is_potentially_eligible = Column(Boolean, default=True)
     conditions_met_json = Column(JSON, default=list)
     pending_verifications_json = Column(JSON, default=list)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=utc_now)
 
     worker = relationship("Worker", back_populates="scheme_eligibilities")
 
@@ -258,7 +261,7 @@ class ConsentRecord(Base):
     dpdp_notice_version = Column(String(20), default="v1.0-2026")
     is_active = Column(Boolean, default=True)
     is_revoked = Column(Boolean, default=False)
-    granted_at = Column(DateTime, default=datetime.utcnow)
+    granted_at = Column(DateTime, default=utc_now)
     # DPDP Act 2023 compliance: consent must be time-bound
     ttl_days = Column(Integer, default=180)  # 180-day default TTL
     expires_at = Column(DateTime, nullable=True)  # Set to granted_at + ttl_days on creation
@@ -281,7 +284,7 @@ class AuditLog(Base):
     ip_address = Column(String(50), default="127.0.0.1")
     session_id = Column(String(64), nullable=True)
     ledger_hash = Column(String(128), nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    timestamp = Column(DateTime, default=utc_now, index=True)
 
 class Certificate(Base):
     __tablename__ = "certificates"
@@ -299,7 +302,7 @@ class Certificate(Base):
     merkle_root = Column(String(128), nullable=False)
     digital_signature = Column(String(128), nullable=False)
     is_valid = Column(Boolean, default=True)
-    issue_date = Column(String(50), default=lambda: datetime.utcnow().strftime("%d %B %Y"))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    issue_date = Column(String(50), default=lambda: utc_now().strftime("%d %B %Y"))
+    created_at = Column(DateTime, default=utc_now)
 
     worker = relationship("Worker", back_populates="certificates")
