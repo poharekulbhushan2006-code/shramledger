@@ -647,10 +647,10 @@ export const MOCK_AUDIT_LOGS = [
 
 export const MOCK_API_KEYS = [
   {
-    key_id: "key_live_nbfc_01",
-    name: "HDFC Rural Micro-Finance Production API",
-    key_prefix: "shram_live_hdfc_8a92f4c1e0",
-    environment: "production",
+    key_id: "key_sandbox_nbfc_01",
+    name: "Micro-Finance Partner Prototype Sandbox",
+    key_prefix: "shram_sand_demo_sandbox_01",
+    environment: "sandbox",
     created_at: "15 Aug 2026, 10:00 UTC",
     last_used_at: "13 Sep 2026, 14:20 UTC",
     is_active: true,
@@ -658,8 +658,8 @@ export const MOCK_API_KEYS = [
   },
   {
     key_id: "key_sandbox_01",
-    name: "L&T Construction Site Integration Sandbox",
-    key_prefix: "shram_sand_lnt_4f3b1900d8",
+    name: "Construction Site Integration Sandbox",
+    key_prefix: "shram_sand_demo_contractor_02",
     environment: "sandbox",
     created_at: "20 Aug 2026, 11:30 UTC",
     last_used_at: "13 Sep 2026, 09:15 UTC",

@@ -34,6 +34,7 @@ import NgoGovPortal from './components/NgoGovPortal';
 import AdminFraudDashboard from './components/AdminFraudDashboard';
 import CommercialQuoteModal from './components/CommercialQuoteModal';
 import CommandPaletteModal from './components/CommandPaletteModal';
+import EndToEndDemoModal from './components/EndToEndDemoModal';
 import { api } from './services/api';
 import { TRANSLATIONS } from './utils/locales';
 
@@ -193,6 +194,7 @@ export default function App() {
   const [isManualOpen, setIsManualOpen] = useState(false);
   const [isQuoteOpen, setIsQuoteOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isEndToEndDemoOpen, setIsEndToEndDemoOpen] = useState(false);
   const [endorseTargetEntry, setEndorseTargetEntry] = useState(null);
 
   useEffect(() => {
@@ -318,6 +320,7 @@ export default function App() {
         onOpenOnboarding={() => setIsOnboardingOpen(true)}
         onOpenQuote={() => setIsQuoteOpen(true)}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onOpenEndToEndDemo={() => setIsEndToEndDemoOpen(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
@@ -594,6 +597,12 @@ export default function App() {
         onOpenQuote={() => setIsQuoteOpen(true)}
         onOpenVoice={() => setIsVoiceOpen(true)}
         onOpenDoc={() => setIsDocOpen(true)}
+      />
+      <EndToEndDemoModal
+        isOpen={isEndToEndDemoOpen}
+        onClose={() => setIsEndToEndDemoOpen(false)}
+        worker={selectedWorker}
+        onComplete={() => { if (selectedWorker) refreshWorkerData(selectedWorker.id); }}
       />
     </div>
   );

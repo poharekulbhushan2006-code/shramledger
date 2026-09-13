@@ -74,7 +74,7 @@ export default function AdminFraudDashboard() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black text-slate-100 font-['Outfit']">
-                  Enterprise Fraud & Audit Control
+                  Multi-vector Fraud &amp; Anomaly Detection Engine
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-400 border border-red-500/30">
                   Risk Flag → Human Review

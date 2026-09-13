@@ -181,9 +181,9 @@ export default function ShramScoreCard({ scoreData, worker, currentLang }) {
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 block mb-0.5">
-                Micro-Credit Pre-Qualification Tier
+                Credit Readiness Evaluation
               </span>
-              <p className="text-sm font-bold text-slate-100">{scoreData.loan_readiness || 'Pre-Approved for up to ₹75,000 Micro-Credit'}</p>
+              <p className="text-sm font-bold text-slate-100">{scoreData.loan_readiness || 'Credit Readiness: High — subject to lender policy and human review.'}</p>
             </div>
           </div>
 

@@ -72,3 +72,4 @@ secrets.json
 # =====================
 *.bak
 *.tmp
+.vercel/

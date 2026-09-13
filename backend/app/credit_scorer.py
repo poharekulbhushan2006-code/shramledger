@@ -114,19 +114,19 @@ class CreditScorer:
         if overall_score >= 780:
             grade = "A+"
             stability_band = "Exceptional Reliability & High Wage Predictability"
-            loan_readiness = "Pre-approved for Micro-Enterprise Loan up to ₹1,00,000 (Mudra / NBFC)"
+            loan_readiness = "Credit Readiness: High — subject to lender policy and human review."
         elif overall_score >= 700:
             grade = "A"
             stability_band = "High Stability & Consistent Work History"
-            loan_readiness = "Eligible for Collateral-Free Credit up to ₹50,000 (PM-SVANidhi / MFI)"
+            loan_readiness = "Credit Readiness: High — subject to lender policy and human review."
         elif overall_score >= 600:
             grade = "B"
             stability_band = "Moderate Reliability"
-            loan_readiness = "Eligible for Micro-Credit up to ₹25,000 with contractor attestation"
+            loan_readiness = "Credit Readiness: Moderate — subject to lender policy and human review."
         else:
             grade = "C"
             stability_band = "Developing Profile"
-            loan_readiness = "Eligible for Micro-Savings & Emergency Credit Pool (₹5,000)"
+            loan_readiness = "Credit Readiness: Developing — subject to lender policy and human review."
 
         # Monthly income calculation based on actual recorded months
         actual_months = len(set(e.date[:7] for e in entries)) or 1  # YYYY-MM distinct months

@@ -34,7 +34,8 @@ export default function Navbar({
   onOpenManualEntry,
   onOpenOnboarding,
   onOpenQuote,
-  onOpenCommandPalette
+  onOpenCommandPalette,
+  onOpenEndToEndDemo
 }) {
   const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
   const [isScrolled, setIsScrolled] = useState(false);
@@ -202,6 +203,15 @@ export default function Navbar({
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white border border-white/25 font-bold text-xs transition-all"
               >
                 Pricing &amp; Quote
+              </button>
+
+              {/* End-to-End Demo Button */}
+              <button
+                onClick={onOpenEndToEndDemo}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded font-black text-xs shadow-md transition-all hover:scale-105 bg-emerald-400 hover:bg-emerald-300 text-slate-950 border border-emerald-300"
+                title="Run complete 9-step credentialing & credit demo"
+              >
+                <span>⚡ End-to-End Demo</span>
               </button>
 
               {/* Register Worker — Saffron CTA */}

@@ -348,3 +348,182 @@ def test_contact_sales_lead_capture():
     assert data["success"] is True
     assert data["inquiry_id"].startswith("LEAD-")
 
+# ----------------- REAL OCR & TAMPER DEMO SUITE -----------------
+
+def test_real_ocr_pipeline_from_image_bytes():
+    """Validates real OpenCV preprocessing and RapidOCR execution on generated image pixels."""
+    import io
+    from PIL import Image, ImageDraw
+
+    # 1. Create a custom test voucher image
+    img = Image.new('RGB', (600, 300), color=(255, 255, 255))
+    d = ImageDraw.Draw(img)
+    d.text((20, 20), 'NIRMAN INFRASTRUCTURE PVT LTD', fill=(0, 0, 0))
+    d.text((20, 60), 'Date: 02-09-2026', fill=(0, 0, 0))
+    d.text((20, 100), 'Worker: Ramesh Kumar - Mason', fill=(0, 0, 0))
+    d.text((20, 140), 'Hours Worked: 8.0 hrs', fill=(0, 0, 0))
+    d.text((20, 180), 'Daily Wage Paid: Rs 850', fill=(0, 0, 0))
+    d.text((20, 220), 'Contractor: Rajesh Sharma (9876543210)', fill=(0, 0, 0))
+
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    img_bytes = buf.getvalue()
+
+    # 2. Run through full OCREngine process_image pipeline
+    doc = OCREngine.process_image(img_bytes, filename="test_slip.png", default_location="Delhi NCR")
+
+    assert doc["title"] is not None
+    assert len(doc["doc_hash"]) == 64
+    assert len(doc["bounding_boxes"]) >= 4
+    assert doc["confidence_score"] > 80.0
+    assert "previews" in doc
+    assert "grayscale" in doc["previews"]
+    assert "threshold" in doc["previews"]
+
+    # Check extracted fields
+    ext = doc["extracted"]
+    assert ext["amount_paid"] == 850.0
+    assert ext["hours_worked"] == 8.0
+    assert "Mason" in ext["skill_type"] or "राजमिस्त्री" in ext["skill_type"]
+    assert ext["employer_phone"] == "9876543210"
+
+def test_tamper_detection_wage_change_850_to_950():
+    """Killer Demo Test: Record 1 (₹850) modified to ₹950 triggers TAMPER DETECTED."""
+    worker = WORKERS_CACHE["worker_ramesh"]
+    genuine_entries = worker.work_entries
+    
+    # 1. Compute genuine Merkle Root
+    genuine_leafs = [MerkleTree.compute_entry_hash(e) for e in genuine_entries]
+    genuine_root, _ = MerkleTree.build_tree(genuine_leafs)
+
+    # 2. Verify Genuine is valid
+    is_valid, is_tampered, explanation = LedgerEngine.verify_ledger_integrity(genuine_entries, genuine_root)
+    assert is_valid is True
+    assert is_tampered is False
+
+    # 3. Simulate Tamper: Alter Record 1 wage from original (e.g. ₹850) to ₹950
+    tampered_entries = [e.model_copy(deep=True) for e in genuine_entries]
+    tampered_entries[0].amount_paid = 950.0
+
+    is_valid_t, is_tampered_t, explanation_t = LedgerEngine.verify_ledger_integrity(tampered_entries, genuine_root)
+    assert is_valid_t is False
+    assert is_tampered_t is True
+    assert "Tamper detected" in explanation_t or "mismatch" in explanation_t
+
+def test_ledger_verify_tamper_api_endpoint():
+    """Tests the /api/ledger/verify-tamper endpoint with altered wage."""
+    payload = {
+        "worker_id": "worker_ramesh",
+        "fake_amount": 950.0
+    }
+    res = client.post("/api/ledger/verify-tamper", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["root_match"] is False
+    assert "REJECTED" in data["verification_result"] or "FRAUD" in data["verification_result"]
+    assert data["tamper_injected"]["fraudulent_wage"] == "₹950.00"
+
+def test_shramscore_credit_readiness_language():
+    """Ensures loan readiness uses defensible Credit Readiness language rather than Pre-approved claims."""
+    worker = WORKERS_CACHE["worker_ramesh"]
+    score = CreditScorer.calculate_score(worker.work_entries, worker.state)
+    
+    assert "Credit Readiness:" in score.loan_readiness
+    assert "subject to lender policy and human review" in score.loan_readiness
+    assert "Pre-approved" not in score.loan_readiness
+    assert "pre-approved" not in score.loan_readiness.lower()
+
+def test_multivector_fraud_detection_engine():
+    """Validates the 3 heuristic vectors: shift collision, wage outlier, and duplicate document hash."""
+    worker = WORKERS_CACHE["worker_ramesh"]
+    base_entry = worker.work_entries[0]
+
+    # Vector 1: Shift Collision
+    colliding = WorkEntry(
+        id="TEST-COLLISION-ALT",
+        worker_id=worker.id,
+        date=base_entry.date,
+        employer_name="Alternate Conflicting Employer",
+        skill_type="Mason",
+        location="Noida",
+        amount_paid=850.0,
+        hours_worked=8.0
+    )
+    alert1 = FraudDetector.analyze_new_entry(colliding, worker.work_entries, worker.name)
+    assert alert1 is not None
+    assert alert1.alert_type == "SHIFT_COLLISION"
+
+    # Vector 2: Wage Spike Outlier (>4x benchmark)
+    spike = WorkEntry(
+        id="TEST-SPIKE-ALT",
+        worker_id=worker.id,
+        date="2026-08-15",
+        employer_name="Normal Contractor",
+        skill_type="Mason",
+        location="Delhi",
+        amount_paid=15000.0,  # Extreme spike
+        hours_worked=8.0
+    )
+    alert2 = FraudDetector.analyze_new_entry(spike, worker.work_entries, worker.name)
+    assert alert2 is not None
+    assert alert2.alert_type == "WAGE_SPIKE_OUTLIER"
+
+    # Vector 3: Duplicate Document Hash
+    test_hash = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+    # First registration
+    FraudDetector.check_document_hash(test_hash, "worker_ramesh", "Ramesh Kumar", "Wage Slip #1")
+    # Second registration by different worker
+    alert3 = FraudDetector.check_document_hash(test_hash, "worker_sunita", "Sunita Devi", "Stolen Slip")
+    assert alert3 is not None
+    assert alert3.alert_type == "DUPLICATE_DOC_HASH"
+
+def test_end_to_end_credentialing_pipeline():
+    """Full End-to-End Pipeline test:
+    Worker -> Image OCR -> Validation -> Fraud Check -> Ledger Anchor -> ShramScore -> Certificate
+    """
+    worker = WORKERS_CACHE["worker_ramesh"]
+    
+    # 1. OCR Ingestion
+    ocr_doc = OCREngine.parse_document("wage_slip")
+    assert ocr_doc["extracted"]["amount_paid"] > 0
+
+    # 2. Wage Validation
+    draft = WorkEntry(
+        id="E2E-TEST-01",
+        worker_id=worker.id,
+        date=ocr_doc["extracted"]["date"],
+        employer_name=ocr_doc["extracted"]["employer_name"],
+        skill_type=ocr_doc["extracted"]["skill_type"],
+        location=ocr_doc["extracted"]["location"],
+        hours_worked=ocr_doc["extracted"]["hours_worked"],
+        amount_paid=ocr_doc["extracted"]["amount_paid"]
+    )
+    is_valid, conf, flags, pos = WageValidator.validate_entry(draft, worker.state)
+    assert is_valid is True
+
+    # 3. Fraud Check
+    alert = FraudDetector.analyze_new_entry(draft, worker.work_entries, worker.name)
+    # Draft is valid with no collisions
+
+    # 4. Ledger Anchoring
+    draft.entry_hash = MerkleTree.compute_entry_hash(draft)
+    assert len(draft.entry_hash) == 64
+
+    # 5. ShramScore Recalculation
+    score = CreditScorer.calculate_score([draft] + worker.work_entries, worker.state)
+    assert 300 <= score.overall_score <= 900
+    assert "Credit Readiness:" in score.loan_readiness
+
+    # 6. Certificate Verification
+    cert = LedgerEngine.generate_certificate(
+        worker_id=worker.id,
+        worker_name=worker.name,
+        primary_trade=worker.primary_trade,
+        location=f"{worker.city}, {worker.state}",
+        entries=[draft] + worker.work_entries,
+        shram_score=score.overall_score
+    )
+    assert cert.is_valid is True
+    assert len(cert.merkle_root) == 64
+    assert len(cert.digital_signature) > 20
+

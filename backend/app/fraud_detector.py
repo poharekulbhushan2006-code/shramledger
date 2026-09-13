@@ -6,7 +6,7 @@ from .validator import WageValidator
 
 class FraudDetector:
     """
-    Enterprise Anomaly & Fraud Detection Engine.
+    Multi-vector Fraud & Anomaly Detection Engine.
     Applies multi-vector heuristic auditing:
     1. Shift Collision (Same worker, same date, multiple employers)
     2. Wage Spike Outlier (>4x statutory daily benchmark)

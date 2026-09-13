@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends, Query, Body, Header, status
+from fastapi import FastAPI, HTTPException, Depends, Query, Body, Header, status, File, UploadFile, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -45,11 +45,11 @@ from .seed_data import generate_seed_profiles, seed_database_if_empty
 WORKERS_CACHE: Dict[str, WorkerProfile] = {}
 CERTIFICATES_CACHE: Dict[str, CertificateVerification] = {}
 API_KEYS_CACHE: Dict[str, ApiKeyDTO] = {
-    "key_live_nbfc_01": ApiKeyDTO(
-        key_id="key_live_nbfc_01",
-        name="HDFC Rural Micro-Finance Production API",
-        key_prefix="shram_live_hdfc_8a92f4c1e0",
-        environment="production",
+    "key_sandbox_nbfc_01": ApiKeyDTO(
+        key_id="key_sandbox_nbfc_01",
+        name="Micro-Finance Partner Prototype Sandbox",
+        key_prefix="shram_sand_demo_sandbox_01",
+        environment="sandbox",
         created_at="15 Aug 2026, 10:00 UTC",
         last_used_at="11 Sep 2026, 14:20 UTC",
         is_active=True,
@@ -57,8 +57,8 @@ API_KEYS_CACHE: Dict[str, ApiKeyDTO] = {
     ),
     "key_sandbox_01": ApiKeyDTO(
         key_id="key_sandbox_01",
-        name="L&T Construction Site Integration Sandbox",
-        key_prefix="shram_sand_lnt_4f3b1900d8",
+        name="Construction Site Integration Sandbox",
+        key_prefix="shram_sand_demo_contractor_02",
         environment="sandbox",
         created_at="20 Aug 2026, 11:30 UTC",
         last_used_at="10 Sep 2026, 09:15 UTC",
@@ -687,9 +687,27 @@ def ingest_voice_log(req: IngestionVoiceRequest):
 
 @app.post("/api/ingest/ocr")
 def ingest_ocr_slip(req: IngestionOCRRequest):
-    doc_result = OCREngine.parse_document(req.slip_type or "wage_slip")
     worker = WORKERS_CACHE.get(req.worker_id)
+    default_loc = f"{worker.city}, {worker.state}" if worker else "Delhi NCR"
     worker_name = worker.name if worker else "Unknown Worker"
+
+    if req.image_base64:
+        import base64
+        raw_b64 = req.image_base64
+        if "," in raw_b64:
+            raw_b64 = raw_b64.split(",", 1)[1]
+        try:
+            img_bytes = base64.b64decode(raw_b64)
+            doc_result = OCREngine.process_image(
+                img_bytes,
+                filename="uploaded_slip.png",
+                slip_type_hint=req.slip_type,
+                default_location=default_loc
+            )
+        except Exception:
+            doc_result = OCREngine.parse_document(req.slip_type or "wage_slip")
+    else:
+        doc_result = OCREngine.parse_document(req.slip_type or "wage_slip")
 
     doc_fraud_alert = FraudDetector.check_document_hash(
         doc_hash=doc_result["doc_hash"],
@@ -730,6 +748,77 @@ def ingest_ocr_slip(req: IngestionOCRRequest):
         "evidence_type": doc_result["evidence_type"],
         "raw_text": doc_result["raw_text"],
         "bounding_boxes": doc_result["bounding_boxes"],
+        "previews": doc_result.get("previews", {}),
+        "pipeline_stages": doc_result.get("pipeline_stages", []),
+        "extracted_entry": draft_entry,
+        "is_duplicate_flagged": (doc_fraud_alert is not None),
+        "validation": {
+            "is_valid": is_valid,
+            "confidence_score": confidence,
+            "flags": flags,
+            "positive_signals": positives
+        }
+    }
+
+@app.post("/api/ingest/ocr-upload")
+async def ingest_ocr_upload(
+    file: UploadFile = File(...),
+    worker_id: str = Form("worker_ramesh"),
+    slip_type_hint: Optional[str] = Form(None)
+):
+    image_bytes = await file.read()
+    worker = WORKERS_CACHE.get(worker_id)
+    default_loc = f"{worker.city}, {worker.state}" if worker else "Delhi NCR"
+    worker_name = worker.name if worker else "Unknown Worker"
+
+    doc_result = OCREngine.process_image(
+        image_bytes,
+        filename=file.filename or "uploaded_voucher.png",
+        slip_type_hint=slip_type_hint,
+        default_location=default_loc
+    )
+
+    doc_fraud_alert = FraudDetector.check_document_hash(
+        doc_hash=doc_result["doc_hash"],
+        worker_id=worker_id,
+        worker_name=worker_name,
+        doc_title=doc_result["title"]
+    )
+
+    extracted = doc_result["extracted"]
+    draft_entry = WorkEntry(
+        id=f"WRK-OCR-{uuid.uuid4().hex[:6].upper()}",
+        worker_id=worker_id,
+        date=extracted["date"],
+        employer_name=extracted["employer_name"],
+        employer_phone=extracted.get("employer_phone"),
+        skill_type=extracted["skill_type"],
+        skill_category=extracted["skill_category"],
+        location=extracted["location"],
+        hours_worked=extracted["hours_worked"],
+        amount_paid=extracted["amount_paid"],
+        payment_mode=extracted["payment_mode"],
+        evidence_type=extracted["evidence_type"],
+        evidence_text=doc_result["raw_text"][:250] + "...",
+        confidence_score=extracted.get("ocr_confidence", 95.0),
+        evidence_strength_band=EvidenceStrengthBand.HIGH,
+        endorsement_status=EndorsementStatus.VERIFIED if extracted.get("employer_phone") else EndorsementStatus.SELF_ATTESTED
+    )
+
+    is_valid, confidence, flags, positives = WageValidator.validate_entry(draft_entry, worker.state if worker else "Default")
+    draft_entry.confidence_score = confidence
+
+    if doc_fraud_alert:
+        flags.append(f"Risk Flag: {doc_fraud_alert.description}")
+
+    return {
+        "title": doc_result["title"],
+        "doc_hash": doc_result["doc_hash"],
+        "evidence_type": doc_result["evidence_type"],
+        "raw_text": doc_result["raw_text"],
+        "bounding_boxes": doc_result["bounding_boxes"],
+        "previews": doc_result.get("previews", {}),
+        "pipeline_stages": doc_result.get("pipeline_stages", []),
         "extracted_entry": draft_entry,
         "is_duplicate_flagged": (doc_fraud_alert is not None),
         "validation": {
@@ -1100,6 +1189,11 @@ def simulate_tamper_test(payload: Dict[str, Any] = Body(...)):
         "explanation": explanation,
         "security_guarantee": "ShramLedger's Tamper-Evident Ledger guarantees that even a 1-paisa change invalidates the entire Merkle Root signature."
     }
+
+@app.post("/api/ledger/verify-tamper")
+def verify_ledger_tamper_explicit(payload: Dict[str, Any] = Body(...)):
+    """Explicit Tamper Verification endpoint: takes wage change (e.g. ₹850 -> ₹950) and returns verification outcome."""
+    return simulate_tamper_test(payload)
 
 # =========================================================================
 # 10. SCHEMES & PRESETS

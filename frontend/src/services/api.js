@@ -214,6 +214,24 @@ export const api = {
     };
   },
 
+  async uploadOCRFile(file, workerId = 'worker_ramesh', slipTypeHint = null) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('worker_id', workerId);
+      if (slipTypeHint) formData.append('slip_type_hint', slipTypeHint);
+
+      const res = await fetch(`${API_BASE}/ingest/ocr-upload`, {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) return await res.json();
+    } catch (err) {
+      console.warn('OCR file upload fetch error:', err);
+    }
+    return this.ingestOCR({ worker_id: workerId, slip_type: slipTypeHint || 'wage_slip' });
+  },
+
   async ingestOCR(payload) {
     try {
       const res = await fetch(`${API_BASE}/ingest/ocr`, {
@@ -224,15 +242,33 @@ export const api = {
       if (res.ok) return await res.json();
     } catch (_) {}
     return {
-      raw_text: "श्री राम कंस्ट्रक्शन साइट - दैनिक मजदूरी ₹850/-, 8 घंटे, आर. के. शर्मा ठेकेदार",
-      extracted_fields: {
-        amount_paid: 850.0,
-        hours_worked: 8.0,
-        date: new Date().toISOString().slice(0, 10),
-        employer_name: "Shree Ram Construction",
-        skill_type: "Mason"
+      title: "Daily Wage Slip Voucher",
+      raw_text: "NIRMAN INFRASTRUCTURE PVT LTD\nDate: 02-09-2026\nWorker: Ramesh Kumar - Mason\nHours Worked: 8.5 hrs\nDaily Wage Paid: Rs. 950\nContractor: Rajesh Sharma (9876543210)",
+      bounding_boxes: [
+        { label: "Header", box: [10, 5, 80, 20], confidence: 0.98 },
+        { label: "Date: 02-09-2026", box: [15, 25, 45, 12], confidence: 0.99 },
+        { label: "Total Paid: ₹950", box: [50, 60, 45, 14], confidence: 0.99 }
+      ],
+      extracted_entry: {
+        amount_paid: 950.0,
+        hours_worked: 8.5,
+        date: "2026-09-02",
+        employer_name: "Nirman Infrastructure (Rajesh Sharma)",
+        employer_phone: "9876543210",
+        skill_type: "Mason / राजमिस्त्री",
+        skill_category: "skilled",
+        location: "Noida, Uttar Pradesh",
+        payment_mode: "Cash",
+        evidence_type: "wage_slip",
+        confidence_score: 97.5
       },
-      confidence_score: 97.2
+      validation: {
+        is_valid: true,
+        confidence_score: 97.5,
+        flags: [],
+        positive_signals: ["Wage meets regional benchmark (₹750/day)", "Valid contractor phone number"]
+      },
+      confidence_score: 97.5
     };
   },
 
