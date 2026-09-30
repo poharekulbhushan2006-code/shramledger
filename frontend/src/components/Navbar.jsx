@@ -108,48 +108,40 @@ export default function Navbar({
       <header
         className={`sticky top-0 z-50 w-full transition-all duration-200 ${
           isScrolled
-            ? 'shadow-lg shadow-blue-900/20'
+            ? 'shadow-xl shadow-black/50'
             : ''
         }`}
-        style={{ background: '#1B4332', borderBottom: '3px solid #F4A900' }}
+        style={{ background: '#04091A', borderBottom: '0.8px solid rgba(255, 255, 255, 0.08)' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[64px] gap-3">
 
             {/* ── Logo & Brand ── */}
-            <div className="flex items-center space-x-3 min-w-0 flex-shrink-0">
+            <div className="flex items-center space-x-3 min-w-0 flex-shrink-0 cursor-pointer" onClick={() => setViewMode('worker')}>
               <div className="relative flex-shrink-0">
-                <div className="w-10 h-10 rounded-lg bg-white p-[2px] shadow-md animate-glow-pulse">
-                  <div className="w-full h-full bg-[#1B4332] rounded-md flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5 text-white" />
-                  </div>
-                </div>
-                <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border border-white" />
-                </span>
+                <span className="aether-brand-mark inline-block" />
               </div>
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg sm:text-xl font-black tracking-tight text-white font-['Noto_Sans']">
+                  <span className="text-base sm:text-lg font-semibold tracking-tight text-white font-['Inter',sans-serif]">
                     ShramLedger
                   </span>
-                  <span className="text-white/60 hidden sm:inline text-sm">|</span>
-                  <span className="text-white/80 hidden sm:inline text-sm font-medium">श्रमLedger</span>
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-white/15 text-white border border-white/25 rounded-sm">
+                  <span className="text-white/30 hidden sm:inline text-sm">•</span>
+                  <span className="text-[#10B981] hidden sm:inline text-xs font-mono font-medium">श्रमLedger</span>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono font-medium uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
                     <Lock className="w-2.5 h-2.5" />
-                    Tamper-Evident
+                    SOVEREIGN MESH
                   </span>
                 </div>
-                <p className="text-[10px] text-white/55 hidden md:block truncate max-w-[280px] leading-tight mt-0.5">
-                  Digital Employment &amp; Income Verification Platform · DPDP 2023 Compliant
+                <p className="text-[10px] text-slate-400 hidden md:block truncate max-w-[300px] leading-tight mt-0.5">
+                  Tamper-Evident Workforce &amp; Income Verification Registry
                 </p>
               </div>
             </div>
 
-            {/* ── Center: Portal Mode Switcher ── */}
-            <div className="hidden xl:flex items-center gap-0.5 p-1 rounded-md bg-white/10 border border-white/20">
+            {/* ── Center: Portal Mode Switcher (Pill tabs) ── */}
+            <div className="hidden xl:flex items-center gap-1 p-1 rounded-full bg-[#020617] border border-white/10">
               {PORTAL_MODES.map((mode) => {
                 const Icon = mode.icon;
                 const isActive = viewMode === mode.id;
@@ -157,10 +149,10 @@ export default function Navbar({
                   <button
                     key={mode.id}
                     onClick={() => setViewMode(mode.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all ${
                       isActive
-                        ? 'bg-[#F4A900] text-[#0D2B20] shadow-sm font-bold'
-                        : 'text-white/75 hover:text-white hover:bg-white/15'
+                        ? 'bg-[#10B981] text-black font-semibold shadow-md'
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
@@ -175,10 +167,10 @@ export default function Navbar({
               <select
                 value={viewMode}
                 onChange={(e) => setViewMode(e.target.value)}
-                className="px-3 py-1.5 rounded bg-white/10 border border-white/25 text-xs font-semibold text-white focus:outline-none"
+                className="px-3 py-1.5 rounded-full bg-[#020617] border border-white/15 text-xs font-semibold text-white focus:outline-none"
               >
                 {PORTAL_MODES.map(m => (
-                  <option key={m.id} value={m.id} className="bg-[#1B4332] text-white">{m.label}</option>
+                  <option key={m.id} value={m.id} className="bg-[#04091A] text-white">{m.label}</option>
                 ))}
               </select>
             </div>
@@ -189,36 +181,35 @@ export default function Navbar({
               {/* Search */}
               <button
                 onClick={onOpenCommandPalette}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white/80 border border-white/20 font-medium text-xs transition-all hover:border-white/40"
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10 font-medium text-xs transition-all hover:border-white/20"
                 title="Search (Ctrl+K)"
               >
-                <Search className="w-3.5 h-3.5" />
+                <Search className="w-3.5 h-3.5 text-slate-400" />
                 <span>Search</span>
-                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-white/60 border border-white/15">⌘K</kbd>
+                <kbd className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/10 text-slate-400 border border-white/10">⌘K</kbd>
               </button>
 
               {/* Quote Button */}
               <button
                 onClick={onOpenQuote}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white border border-white/25 font-bold text-xs transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/10 font-medium text-xs transition-all"
               >
-                Pricing &amp; Quote
+                Pricing
               </button>
 
               {/* End-to-End Demo Button */}
               <button
                 onClick={onOpenEndToEndDemo}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded font-black text-xs shadow-md transition-all hover:scale-105 bg-emerald-400 hover:bg-emerald-300 text-slate-950 border border-emerald-300"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium text-xs transition-all bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                 title="Run complete 9-step credentialing & credit demo"
               >
-                <span>⚡ End-to-End Demo</span>
+                <span>⚡ Live Demo</span>
               </button>
 
-              {/* Register Worker — Saffron CTA */}
+              {/* Register Worker CTA */}
               <button
                 onClick={onOpenOnboarding}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded font-black text-xs shadow-md transition-all hover:scale-105"
-                style={{ background: '#F4A900', color: '#0D2B20', border: '1.5px solid #C8860A' }}
+                className="aether-btn aether-btn-primary flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Register Worker</span>
@@ -229,39 +220,39 @@ export default function Navbar({
                 <div className="relative hidden md:block">
                   <button
                     onClick={() => setWorkerDropOpen(!workerDropOpen)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded bg-white/10 border border-white/25 text-white text-xs font-semibold hover:bg-white/20 transition-all"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-slate-200 text-xs font-medium hover:bg-white/[0.08] transition-all"
                   >
                     <img
                       src={selectedWorker?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"}
                       alt={selectedWorker?.name}
-                      className="w-6 h-6 rounded object-cover border border-white/30"
+                      className="w-5 h-5 rounded-full object-cover border border-white/20"
                     />
-                    <span className="max-w-[100px] truncate">{selectedWorker?.name}</span>
-                    <ChevronDown className={`w-3 h-3 text-white/60 transition-transform duration-200 ${workerDropOpen ? 'rotate-180' : ''}`} />
+                    <span className="max-w-[90px] truncate">{selectedWorker?.name}</span>
+                    <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${workerDropOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {workerDropOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg p-2 shadow-xl z-50 animate-scale-in">
-                      <p className="text-[9px] text-gray-400 uppercase tracking-widest px-2 pb-2 font-bold border-b border-gray-100 mb-2">
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-[#04091A] border border-white/10 rounded-xl p-2 shadow-2xl z-50 animate-scale-in">
+                      <p className="text-[9px] text-slate-400 uppercase tracking-widest px-2 pb-2 font-mono border-b border-white/10 mb-2">
                         {t.selectWorker}
                       </p>
                       {workers.map((w) => (
                         <button
                           key={w.id}
                           onClick={() => { setSelectedWorker(w); setWorkerDropOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-all text-left text-xs group ${
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left text-xs group ${
                             selectedWorker?.id === w.id
-                              ? 'bg-green-50 border border-green-300 text-green-900'
-                              : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                              ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
+                              : 'hover:bg-white/[0.05] text-slate-300 hover:text-white'
                           }`}
                         >
-                          <img src={w.avatar_url} alt={w.name} className="w-8 h-8 rounded object-cover border border-gray-200" />
+                          <img src={w.avatar_url} alt={w.name} className="w-8 h-8 rounded-full object-cover border border-white/10" />
                           <div className="min-w-0">
-                            <p className="font-bold truncate text-gray-900">{w.name}</p>
-                            <p className="text-[10px] text-gray-400 truncate">{w.primary_trade.split('/')[0].trim()} · {w.city}</p>
+                            <p className="font-semibold truncate text-white">{w.name}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{w.primary_trade.split('/')[0].trim()} · {w.city}</p>
                           </div>
                           {selectedWorker?.id === w.id && (
-                            <CheckCircle2 className="w-3.5 h-3.5 ml-auto shrink-0" style={{color:'#1B4332'}} />
+                            <CheckCircle2 className="w-3.5 h-3.5 ml-auto shrink-0 text-[#10B981]" />
                           )}
                         </button>
                       ))}
@@ -271,15 +262,15 @@ export default function Navbar({
               )}
 
               {/* Language Selector */}
-              <div className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-white/10 border border-white/20 text-xs text-white hover:bg-white/20 transition-colors">
-                <Globe className="w-3.5 h-3.5 shrink-0 text-white/80" />
+              <div className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs text-slate-300 hover:bg-white/[0.08] transition-colors">
+                <Globe className="w-3.5 h-3.5 shrink-0 text-slate-400" />
                 <select
                   value={currentLang}
                   onChange={(e) => setLang(e.target.value)}
-                  className="bg-transparent text-white text-xs focus:outline-none cursor-pointer appearance-none pr-1"
+                  className="bg-transparent text-slate-200 text-xs focus:outline-none cursor-pointer appearance-none pr-1"
                 >
                   {languages.map((l) => (
-                    <option key={l.code} value={l.code} className="bg-[#1B4332] text-white">{l.label}</option>
+                    <option key={l.code} value={l.code} className="bg-[#04091A] text-white">{l.label}</option>
                   ))}
                 </select>
               </div>
@@ -287,7 +278,7 @@ export default function Navbar({
               {/* Mobile Toggle */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="xl:hidden p-2 rounded bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
+                className="xl:hidden p-2 rounded-full bg-white/[0.04] border border-white/10 text-white hover:bg-white/[0.08] transition-all"
               >
                 {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
               </button>
@@ -297,18 +288,17 @@ export default function Navbar({
 
         {/* Mobile Dropdown */}
         {mobileOpen && (
-          <div className="xl:hidden border-t border-white/10 px-4 pb-4 pt-3 space-y-3 animate-slide-up" style={{background:'#0D2B20'}}>
+          <div className="xl:hidden border-t border-white/10 px-4 pb-4 pt-3 space-y-3 animate-slide-up bg-[#04091A]">
             <div className="grid grid-cols-2 gap-2">
               {PORTAL_MODES.map((mode) => (
                 <button
                   key={mode.id}
                   onClick={() => { setViewMode(mode.id); setMobileOpen(false); }}
-                  className={`flex items-center gap-2 p-2.5 rounded text-xs font-bold transition-all ${
+                  className={`flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium transition-all ${
                     viewMode === mode.id
-                      ? 'text-white'
-                      : 'bg-white/10 text-white/70'
+                      ? 'bg-[#10B981] text-black font-semibold'
+                      : 'bg-white/[0.04] border border-white/10 text-slate-300'
                   }`}
-                  style={viewMode === mode.id ? {background:'#F4A900', color:'#0D2B20'} : {}}
                 >
                   <mode.icon className="w-4 h-4" />
                   <span>{mode.label}</span>

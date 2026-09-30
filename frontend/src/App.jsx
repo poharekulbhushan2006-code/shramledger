@@ -63,63 +63,52 @@ function LoadingScreen() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden" style={{background:'#f5f7fa'}}>
-      {/* Subtle background dots */}
-      <div className="absolute inset-0 bg-dots opacity-60" />
-      {/* Tricolor decorative orbs */}
-      <div className="orb orb-amber w-[400px] h-[400px] -top-24 -right-24 opacity-25" />
-      <div className="orb orb-emerald w-[350px] h-[350px] -bottom-20 -left-20 opacity-20" />
-      <div className="orb orb-indigo w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-15" />
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden" style={{background:'#020617'}}>
+      {/* Subtle background ambient glow */}
+      <div className="absolute w-[500px] h-[500px] rounded-full blur-[140px] opacity-15 pointer-events-none" style={{background:'#10B981', top:'20%', left:'50%', transform:'translateX(-50%)'}} />
+      <div className="absolute inset-0 bg-dots opacity-20" />
 
-      <div className="relative z-10 flex flex-col items-center space-y-8 px-8">
-        {/* Government Emblem */}
+      <div className="relative z-10 flex flex-col items-center space-y-7 px-8">
+        {/* Glowing Brand Mark Emblem */}
         <div className="relative">
-          <div className="w-24 h-24 rounded-2xl p-[3px] shadow-xl animate-glow-pulse" style={{background:'linear-gradient(135deg,#1B4332,#F4A900)'}}>
-            <div className="w-full h-full rounded-[14px] flex items-center justify-center" style={{background:'#1B4332'}}>
-              <ShieldCheck className="w-12 h-12 text-white" />
+          <div className="w-20 h-20 rounded-2xl p-[1px] shadow-2xl" style={{background:'linear-gradient(135deg, rgba(16,185,129,0.8), rgba(255,255,255,0.1))'}}>
+            <div className="w-full h-full rounded-[15px] flex items-center justify-center" style={{background:'#04091A'}}>
+              <ShieldCheck className="w-10 h-10 text-[#10B981]" />
             </div>
           </div>
-          <div className="absolute inset-0 flex items-center justify-center" style={{animation: 'orbit 3s linear infinite'}}>
-            <div className="absolute w-3 h-3 rounded-full border-2 border-white" style={{top: '-6px', left: '50%', marginLeft: '-6px', background:'#F4A900'}} />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{animation: 'orbit 3s linear infinite'}}>
+            <div className="absolute w-2.5 h-2.5 rounded-full shadow-lg" style={{top: '-4px', left: '50%', marginLeft: '-5px', background:'#10B981', boxShadow:'0 0 10px #10B981'}} />
           </div>
-        </div>
-
-        {/* Tricolor stripe */}
-        <div className="w-48 h-1.5 rounded-full overflow-hidden flex">
-          <div className="flex-1" style={{background:'#FF6B00'}} />
-          <div className="flex-1 bg-white border-y border-gray-200" />
-          <div className="flex-1" style={{background:'#138808'}} />
         </div>
 
         <div className="text-center">
-          <h1 className="text-4xl font-black tracking-tight font-['Playfair_Display'] mb-1" style={{color:'#1B4332'}}>
+          <h1 className="text-3xl font-light tracking-tight text-white mb-1 font-['Inter',sans-serif]">
             ShramLedger
           </h1>
-          <p className="text-base font-semibold mb-0.5" style={{color:'#F4A900'}}>श्रमLedger</p>
-          <p className="text-sm text-gray-500 font-medium">
-            Digital Employment &amp; Income Verification Platform
+          <p className="text-xs font-mono font-medium tracking-wider mb-1" style={{color:'#10B981'}}>श्रमLedger · SOVEREIGN MESH</p>
+          <p className="text-xs text-slate-400 font-normal">
+            Digital Workforce &amp; Income Verification Infrastructure
           </p>
-          <p className="text-xs text-gray-400 mt-1">Ministry of Labour &amp; Employment · Government of India</p>
         </div>
 
         {/* Progress Bar */}
         <div className="w-80">
-          <div className="flex justify-between text-[10px] text-gray-400 font-mono mb-2">
+          <div className="flex justify-between text-[11px] text-slate-400 font-mono mb-2">
             <span>{steps[stepIdx]}</span>
-            <span>{progress}%</span>
+            <span className="text-[#10B981]">{progress}%</span>
           </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{background:'#e8eef8', border:'1px solid #d0d9e8'}}>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{background:'#0F172A', border:'1px solid rgba(255,255,255,0.08)'}}>
             <div
               className="h-full rounded-full transition-all duration-300"
-              style={{ width: `${progress}%`, background:'linear-gradient(90deg,#1B4332,#F4A900)' }}
+              style={{ width: `${progress}%`, background:'linear-gradient(90deg, #10B981, #34D399)' }}
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-xs text-gray-400">
-          {['450M+ Workers', 'SHA-256 Merkle', 'DPDP 2023', '5 Languages'].map((stat) => (
+        <div className="flex items-center gap-6 text-xs text-slate-500 font-mono">
+          {['450M+ Workers', 'SHA-256 Merkle', 'DPDP 2023', '&lt;42ms Latency'].map((stat) => (
             <div key={stat} className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full" style={{background:'#1B4332'}} />
+              <div className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
               <span>{stat}</span>
             </div>
           ))}
@@ -133,37 +122,37 @@ function LoadingScreen() {
 function MetricBadge({ label, value, sub, accent = 'navy' }) {
   const colorMap = {
     navy:    { color: '#1B4332', bg: '#EAF5EE', border: '#94B8A4' },
-    saffron: { color: '#C8860A', bg: '#FFF3CD', border: '#F4A900' },
-    green:   { color: '#1B7A3E', bg: '#e8f5e6', border: '#9fd09b' },
-    amber:   { color: '#C8860A', bg: '#FFF3CD', border: '#F4A900' },
-    blue:    { color: '#2D6A4F', bg: '#EAF5EE', border: '#74C69D' },
+    navy:    { color: '#10B981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.3)' },
+    saffron: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)' },
+    green:   { color: '#34D399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.3)' },
+    amber:   { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)' },
+    blue:    { color: '#38BDF8', bg: 'rgba(56,189,248,0.1)', border: 'rgba(56,189,248,0.3)' },
   };
   const c = colorMap[accent] || colorMap.navy;
   return (
-    <div className="gov-card p-4 rounded-md" style={{borderTopColor: c.color}}>
-      <span className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{color:'#5C7A6A'}}>{label}</span>
-      <span className="text-lg font-extrabold block leading-tight" style={{color: c.color}}>{value}</span>
-      {sub && <span className="text-[10px] mt-0.5 block" style={{color:'#9aaac0'}}>{sub}</span>}
+    <div className="gov-card p-4 rounded-xl border border-white/10" style={{borderTopColor: c.color}}>
+      <span className="text-[10px] font-mono uppercase tracking-wider block mb-1 text-slate-400">{label}</span>
+      <span className="text-xl font-light tracking-tight block leading-tight text-white font-mono">{value}</span>
+      {sub && <span className="text-[10px] mt-1 block text-slate-400 font-sans">{sub}</span>}
     </div>
   );
 }
 
 // ─── Tab Button ─────────────────────────────────────────────────────────
-function TabButton({ active, onClick, icon: Icon, label, badge, activeClass }) {
+function TabButton({ active, onClick, icon: Icon, label, badge }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded text-xs font-bold transition-all duration-200 whitespace-nowrap ${
+      className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap ${
         active
-          ? 'text-white shadow-md'
-          : 'text-gray-500 hover:text-gray-800 hover:bg-blue-50'
+          ? 'bg-[#10B981] text-black shadow-lg shadow-emerald-500/20 font-semibold'
+          : 'bg-white/[0.04] text-slate-300 border border-white/10 hover:border-white/20 hover:text-white hover:bg-white/[0.08]'
       }`}
-      style={active ? {background:'#1B4332'} : {background:'#F0F7F2', border:'1px solid #C8DDD2'}}
     >
       <Icon className="w-4 h-4" />
       <span>{label}</span>
       {badge != null && (
-        <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${active ? 'bg-white/20 text-white/90' : 'bg-gray-200 text-gray-600'}`}>
+        <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${active ? 'bg-black/20 text-black' : 'bg-white/10 text-slate-400'}`}>
           {badge}
         </span>
       )}
@@ -269,11 +258,10 @@ export default function App() {
   const handleEndorsed = () => { if (selectedWorker) refreshWorkerData(selectedWorker.id); };
 
   const HeroBg = () => (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      <div className="orb orb-amber w-[700px] h-[700px] -top-48 -right-48 opacity-15" />
-      <div className="orb orb-emerald w-[500px] h-[500px] -bottom-32 -left-32 opacity-10" />
-      <div className="orb orb-indigo w-[400px] h-[400px] top-1/2 -translate-y-1/2 left-1/3 opacity-10" />
-      <div className="absolute inset-0 bg-dots opacity-50" />
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      <div className="absolute w-[600px] h-[600px] rounded-full blur-[160px] opacity-10 bg-[#10B981] -top-40 -right-40" />
+      <div className="absolute w-[500px] h-[500px] rounded-full blur-[140px] opacity-08 bg-[#38BDF8] -bottom-40 -left-40" />
+      <div className="absolute inset-0 bg-dots opacity-20" />
     </div>
   );
 
@@ -284,24 +272,23 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{background:'#F8FAF9', color:'#1A2E25'}}>
+    <div className="min-h-screen flex flex-col font-['Inter',sans-serif] aether-frame" style={{background:'#020617', color:'#FFFFFF'}}>
       
       <HeroBg />
 
-      {/* Government Breadcrumb Strip */}
-      <div className="relative z-50 py-1.5 px-4 flex items-center justify-between" style={{background:'#EEF5F1', borderBottom:'1px solid #C8DDD2'}}>
+      {/* Sovereign Infrastructure Breadcrumb Strip */}
+      <div className="relative z-40 py-2 px-6 flex items-center justify-between border-b border-white/[0.08] bg-[#04091A]">
         <button
           onClick={() => setShowLanding(true)}
-          className="flex items-center gap-2 text-[11px] font-medium group transition-colors"
-          style={{color:'#5C7A6A'}}
+          className="flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-white transition-colors"
         >
-          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" style={{color:'#1B4332'}} />
-          <span className="hover:underline" style={{color:'#1B4332'}}>Home &gt; Worker Dashboard</span>
+          <ArrowLeft className="w-3.5 h-3.5 text-[#10B981]" />
+          <span>&larr; Sovereign Home / <span className="text-white capitalize">{viewMode} Portal</span></span>
         </button>
-        <div className="flex items-center gap-3 text-[10px]" style={{color:'#6b7c9e'}}>
+        <div className="flex items-center gap-4 text-xs text-slate-400 font-mono">
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            Live System · SHA-256 Merkle Ledger · DPDP 2023 Compliant
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+            Live Sovereign Mesh · SHA-256 Validated · DPDP 2023 Compliant
           </span>
         </div>
       </div>
@@ -350,41 +337,41 @@ export default function App() {
 
             {/* ── Worker Hero Banner ───────────────────────────────── */}
             {selectedWorker && scoreData && (
-              <div className="rounded-2xl gov-card p-6 sm:p-8 relative overflow-hidden" style={{borderTop: '4px solid #1B4332'}}>
+              <div className="rounded-2xl p-6 sm:p-8 relative overflow-hidden bg-[#04091A] border border-white/10 shadow-2xl">
                 
                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 relative z-10">
 
                   {/* Worker Identity */}
                   <div className="flex items-center gap-5">
                     <div className="relative flex-shrink-0">
-                      <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl p-[2px] shadow-md" style={{background:'linear-gradient(135deg, #1B4332, #F4A900)'}}>
+                      <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl p-[1px] shadow-xl bg-gradient-to-br from-[#10B981] to-white/10">
                         <img
                           src={selectedWorker.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"}
                           alt={selectedWorker.name}
-                          className="w-full h-full rounded-[14px] object-cover bg-white"
+                          className="w-full h-full rounded-[15px] object-cover bg-[#020617]"
                           style={{width: '76px', height: '76px'}}
                         />
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center">
-                        <CheckCircle2 className="w-3 h-3 text-white" />
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#10B981] border-2 border-[#04091A] flex items-center justify-center">
+                        <CheckCircle2 className="w-3 h-3 text-black font-bold" />
                       </div>
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <h1 className="text-2xl font-bold font-['Playfair_Display'] text-[#1A2E25]">
+                        <h1 className="text-2xl font-semibold tracking-tight text-white font-['Inter',sans-serif]">
                           {selectedWorker.name}
                         </h1>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#EAF5EE] text-[#1B7A3E] border border-[#94B8A4] flex items-center gap-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                           <Activity className="w-2.5 h-2.5" />
                           DPDP Consent Active
                         </span>
                       </div>
-                      <p className="text-sm font-semibold flex items-center gap-2 text-[#2D6A4F]">
+                      <p className="text-sm font-medium flex items-center gap-2 text-emerald-400">
                         <span>🛠️ {selectedWorker.primary_trade}</span>
-                        <span className="text-gray-300">•</span>
+                        <span className="text-white/20">•</span>
                         <span>📍 {selectedWorker.city}, {selectedWorker.state}</span>
                       </p>
-                      <p className="text-[11px] text-[#5C7A6A] mt-1 font-mono">
+                      <p className="text-[11px] text-slate-400 mt-1 font-mono">
                         🆔 {selectedWorker.aadhaar_masked} • 📞 {selectedWorker.phone}
                       </p>
                     </div>
@@ -418,32 +405,29 @@ export default function App() {
                 </div>
 
                 {/* Quick Ingest Bar */}
-                <div className="mt-6 pt-5 border-t border-[#C8DDD2] flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 text-xs text-[#5C7A6A]">
-                    <Sparkles className="w-3.5 h-3.5 text-[#F4A900]" />
+                <div className="mt-6 pt-5 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <Sparkles className="w-3.5 h-3.5 text-[#10B981]" />
                     <span className="font-medium">Multi-Modal Ingestion: Indic Voice + 9-Format OCR</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setIsVoiceOpen(true)}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded font-bold text-xs transition-all shadow-sm"
-                      style={{background:'#FFF3CD', color:'#C8860A', border:'1px solid #F4A900'}}
+                      className="aether-btn aether-btn-primary flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold"
                     >
                       <Mic className="w-3.5 h-3.5" />
                       <span>{t.voiceLog}</span>
                     </button>
                     <button
                       onClick={() => setIsDocOpen(true)}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded font-bold text-xs transition-all shadow-sm"
-                      style={{background:'#EAF5EE', color:'#1B4332', border:'1px solid #94B8A4'}}
+                      className="aether-btn aether-btn-secondary flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs"
                     >
                       <FileText className="w-3.5 h-3.5" />
                       <span>{t.scanSlip}</span>
                     </button>
                     <button
                       onClick={() => setIsManualOpen(true)}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-white font-bold text-xs transition-all shadow-sm"
-                      style={{color:'#1B4332', border:'1px solid #C8DDD2'}}
+                      className="aether-btn aether-btn-secondary flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs"
                     >
                       <PlusCircle className="w-3.5 h-3.5" />
                       <span>{t.manualEntry}</span>
